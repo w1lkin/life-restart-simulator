@@ -1,0 +1,104 @@
+<h2>事件引擎 & 结局系统</h2>
+<p class="subtitle">事件如何匹配和触发，结局如何评定</p>
+
+<div class="section">
+  <h3>🎲 事件匹配逻辑</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-size:13px;line-height:1.8;color:#ccc;padding:16px;">
+      <p>每阶段从事件池中筛选可触发事件，每个事件带有这些标签：</p>
+      <div style="background:#1a1a2e;padding:12px;border-radius:6px;font-family:monospace;font-size:12px;">
+        event: {<br>
+        &nbsp;&nbsp;id: "young_warrior_01",<br>
+        &nbsp;&nbsp;stage: ["幼年","少年"],&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 所属阶段</span><br>
+        &nbsp;&nbsp;minAttr: {力量: 30},&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 最低属性门槛</span><br>
+        &nbsp;&nbsp;vision: ["传说勇者"],&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 愿景专属（可选）</span><br>
+        &nbsp;&nbsp;difficulty: "any",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 难度限制</span><br>
+        &nbsp;&nbsp;weight: 10,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 抽取权重</span><br>
+        &nbsp;&nbsp;options: [...] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 2-4个选项</span><br>
+        }
+      </div>
+      <p style="font-size:12px;color:#888;margin-top:8px;">筛选逻辑：匹配阶段 → 过滤难度 → 过滤属性门槛 → 按权重随机抽取2-3个 → 展示给玩家</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>📝 事件选项结构</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-size:13px;line-height:1.8;color:#ccc;padding:16px;">
+      <div style="background:#1a1a2e;padding:12px;border-radius:6px;font-family:monospace;font-size:12px;margin-bottom:12px;">
+        option: {<br>
+        &nbsp;&nbsp;text: "拜师学武",<br>
+        &nbsp;&nbsp;require: {力量: 50},&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 可选，属性门槛</span><br>
+        &nbsp;&nbsp;effects: {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;力量: +10, 声望: +20, 财富: -50<br>
+        &nbsp;&nbsp;},<br>
+        &nbsp;&nbsp;narrative: "你拜入名师门下..."&nbsp;&nbsp;<span style="color:#666;">// 叙事文本</span><br>
+        }
+      </div>
+      <p>每个选项造成属性变化+一段叙事文本。门槛选项有特殊视觉标识（🔒），达标才可选取。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>💀 死亡/结局触发条件</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-size:13px;line-height:1.8;color:#ccc;padding:16px;">
+      <table style="width:100%;border-collapse:collapse;">
+        <tr style="border-bottom:1px solid #333;">
+          <th style="text-align:left;padding:8px;color:#c41e3a;">触发方式</th>
+          <th style="text-align:left;padding:8px;color:#c41e3a;">条件</th>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;">💀 意外死亡</td>
+          <td style="padding:8px;">特定事件选择致死选项，体质不足时触发概率提升</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;">🕯️ 寿终正寝</td>
+          <td style="padding:8px;">完整走完所有阶段，体质决定寿命上限</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;">🏆 命运达成</td>
+          <td style="padding:8px;">满足愿景条件后提前触发专属结局</td>
+        </tr>
+        <tr>
+          <td style="padding:8px;">🧟 特殊终结</td>
+          <td style="padding:8px;">道德极端（正负100）、财富归零等边界状态触发</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>🏆 结局画面构成</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-size:14px;line-height:2;color:#ccc;padding:20px;">
+      <div style="text-align:center;">
+        <div style="font-size:24px;color:#e2b04a;margin-bottom:8px;">「屠龙勇者」</div>
+        <div style="color:#888;font-size:14px;margin-bottom:16px;">结局称号</div>
+
+        <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;">
+          <div>力量 <span style="color:#4caf50;">SS</span></div>
+          <div>智慧 <span style="color:#4caf50;">A</span></div>
+          <div>魅力 <span style="color:#ff9800;">B</span></div>
+        </div>
+        <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;">
+          <div>敏捷 <span style="color:#4caf50;">S</span></div>
+          <div>体质 <span style="color:#4caf50;">SS</span></div>
+          <div>运气 <span style="color:#ff9800;">C</span></div>
+        </div>
+        <div style="margin-bottom:16px;color:#888;">财富 85,000 · 声望 720 · 道德 +45</div>
+
+        <div style="background:#1a1a2e;padding:16px;border-radius:8px;max-width:400px;margin:0 auto;">
+          <p style="color:#ccc;font-style:italic;margin:0;">「你手持龙牙巨剑，站在魔王的尸骸之上。世人传颂你的名字，但你心里清楚——真正的力量，来自那个在铁匠铺里挥汗如雨的少年。」</p>
+        </div>
+
+        <div style="margin-top:16px;font-size:48px;">S</div>
+        <div style="color:#e2b04a;">综合评分</div>
+        <div style="font-size:12px;color:#888;margin-top:12px;">愿景「传说勇者」✅ 已完成</div>
+      </div>
+    </div>
+  </div>
+</div>

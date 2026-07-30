@@ -1,0 +1,145 @@
+<h2>本地存储 & UI 布局</h2>
+<p class="subtitle">暗黑奇幻风的视觉呈现和存储结构</p>
+
+<div class="section">
+  <h3>💾 本地存储结构</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-size:13px;line-height:1.8;color:#ccc;padding:16px;">
+      <p>使用 <code style="color:#e2b04a;">localStorage</code>，两个 key：</p>
+      <div style="background:#1a1a2e;padding:16px;border-radius:6px;font-family:monospace;font-size:12px;margin-bottom:12px;">
+        <span style="color:#4caf50;">life_history</span> = [ {<br>
+        &nbsp;&nbsp;id: "2026-05-27-001",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 唯一ID</span><br>
+        &nbsp;&nbsp;race, identity, vision,&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 开局选择</span><br>
+        &nbsp;&nbsp;difficulty,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 难度</span><br>
+        &nbsp;&nbsp;talents: [...],&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 天赋列表</span><br>
+        &nbsp;&nbsp;finalAttrs: {...},&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 最终属性</span><br>
+        &nbsp;&nbsp;title: "屠龙勇者",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 结局称号</span><br>
+        &nbsp;&nbsp;score: "S",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 综合评分</span><br>
+        &nbsp;&nbsp;narrative: "..."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 结局叙事</span><br>
+        &nbsp;&nbsp;timestamp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 完成时间</span><br>
+        }, ... ]
+      </div>
+      <div style="background:#1a1a2e;padding:16px;border-radius:6px;font-family:monospace;font-size:12px;">
+        <span style="color:#4caf50;">life_progress</span> = { <span style="color:#666;">// 仅存当前进度，null 表示无进行中游戏</span><br>
+        &nbsp;&nbsp;race, identity, vision, difficulty,<br>
+        &nbsp;&nbsp;talents: [...],<br>
+        &nbsp;&nbsp;attrs: {...},&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 当前属性值</span><br>
+        &nbsp;&nbsp;currentStage: "青年",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 当前所在阶段</span><br>
+        &nbsp;&nbsp;stageIndex: 3,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 阶段序号</span><br>
+        &nbsp;&nbsp;completedEvents: [...]&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#666;">// 已完成事件ID（防止重复）</span><br>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>🎨 UI 布局方案</h3>
+  <div class="mockup">
+    <div class="mockup-header">单页面应用，条件渲染不同"屏幕"</div>
+    <div class="mockup-body" style="padding:16px;">
+
+      <!-- 标题画面 -->
+      <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:8px;padding:24px;margin-bottom:16px;text-align:center;">
+        <div style="color:#888;font-size:11px;margin-bottom:4px;">🎬 标题画面</div>
+        <div style="font-size:28px;color:#c9a84c;letter-spacing:6px;margin-bottom:8px;">人 生 重 开</div>
+        <div style="font-size:13px;color:#666;margin-bottom:16px;">Life Restart Simulator</div>
+        <div style="display:flex;gap:8px;justify-content:center;">
+          <div class="mock-button" style="color:#c9a84c;border-color:#c9a84c;">新游戏</div>
+          <div class="mock-button" style="color:#888;">继续</div>
+          <div class="mock-button" style="color:#888;">生平回顾</div>
+        </div>
+      </div>
+
+      <!-- 开局选择 -->
+      <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:8px;padding:20px;margin-bottom:16px;">
+        <div style="color:#888;font-size:11px;margin-bottom:8px;">🧬 开局 · 选择种族</div>
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <div style="background:#1a1a2e;border:1px solid #c9a84c;padding:10px 16px;border-radius:6px;text-align:center;">
+            <div style="font-size:24px;">👤</div>
+            <div style="font-size:12px;color:#ccc;">人类</div>
+          </div>
+          <div style="background:#1a1a2e;border:1px solid #333;padding:10px 16px;border-radius:6px;text-align:center;">
+            <div style="font-size:24px;">🧝</div>
+            <div style="font-size:12px;color:#ccc;">精灵</div>
+          </div>
+          <div style="background:#1a1a2e;border:1px solid #333;padding:10px 16px;border-radius:6px;text-align:center;">
+            <div style="font-size:24px;">🧔</div>
+            <div style="font-size:12px;color:#ccc;">矮人</div>
+          </div>
+          <div style="background:#1a1a2e;border:1px solid #333;padding:10px 16px;border-radius:6px;text-align:center;">
+            <div style="font-size:24px;">🐉</div>
+            <div style="font-size:12px;color:#ccc;">龙裔</div>
+          </div>
+          <div style="background:#1a1a2e;border:1px solid #333;padding:10px 16px;border-radius:6px;text-align:center;">
+            <div style="font-size:24px;">🌑</div>
+            <div style="font-size:12px;color:#ccc;">暗精灵</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 事件选择 -->
+      <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:8px;padding:20px;margin-bottom:16px;">
+        <div style="color:#888;font-size:11px;margin-bottom:8px;">🎭 人生阶段 · 青年</div>
+        <div style="background:#1a1a2e;padding:12px;border-radius:6px;margin-bottom:12px;color:#ccc;font-size:13px;font-style:italic;">
+          "你在冒险旅途中遇到了一位神秘的老者，他声称看出了你的潜力..."
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="background:#1a1a2e;border:1px solid #333;padding:8px 14px;border-radius:6px;font-size:13px;color:#ccc;">
+            A. 拜他为师 —— <span style="color:#4caf50;">智慧 +8, 声望 +10</span>
+          </div>
+          <div style="background:#1a1a2e;border:1px solid #333;padding:8px 14px;border-radius:6px;font-size:13px;color:#888;">
+            B. 客气推辞 —— <span style="color:#888;">魅力 +3</span> <span style="color:#666;">🔒 魅力 ≥ 60</span>
+          </div>
+          <div style="background:#1a1a2e;border:1px solid #333;padding:8px 14px;border-radius:6px;font-size:13px;color:#ccc;">
+            C. 无视他继续赶路 —— <span style="color:#888;">无变化</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:8px;">当前属性：力量 45 · 智慧 62 · 魅力 35 · 敏捷 40 · 体质 50 · 运气 28</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>🎨 暗黑奇幻风视觉规范</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-size:13px;line-height:2;color:#ccc;padding:16px;">
+      <table style="width:100%;border-collapse:collapse;">
+        <tr style="border-bottom:1px solid #333;">
+          <th style="text-align:left;padding:8px;color:#c9a84c;">要素</th>
+          <th style="text-align:left;padding:8px;color:#c9a84c;">规范</th>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;">主色调</td>
+          <td style="padding:8px;">深黑 <code>#0d0d0d</code>，深蓝黑 <code>#1a1a2e</code></td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;">强调色</td>
+          <td style="padding:8px;">古铜金 <code>#c9a84c</code>，血红 <code>#c41e3a</code></td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;">正/负面</td>
+          <td style="padding:8px;">墨绿 <code>#4caf50</code> / 暗红 <code>#f44336</code></td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;">字体</td>
+          <td style="padding:8px;">标题用衬线体（serif），正文用无衬线（系统默认）</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;">边框/分隔</td>
+          <td style="padding:8px;">细线 <code>#2a2a2a</code>，选中态用金色 <code>#c9a84c</code></td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;">卡片</td>
+          <td style="padding:8px;">深色背景 + 细微边框，圆角 6-8px</td>
+        </tr>
+        <tr>
+          <td style="padding:8px;">响应式</td>
+          <td style="padding:8px;">适配手机竖屏（375-414px宽度），微信WebView优先</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,47 @@
+<h2>整体游戏流程</h2>
+<p class="subtitle">状态机驱动的主流程，含开局和人生模拟两大板块</p>
+
+<div class="mockup" style="margin-bottom:20px;">
+  <div class="mockup-header">游戏状态流转</div>
+  <div class="mockup-body" style="font-family:monospace;font-size:14px;line-height:2;padding:24px;">
+
+    <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:24px;">
+      <span style="background:#16213e;color:#e2b04a;padding:6px 14px;border-radius:6px;">🎬 标题画面</span>
+      <span style="color:#888;">→</span>
+      <span style="background:#16213e;color:#e2b04a;padding:6px 14px;border-radius:6px;">⚙️ 难度选择</span>
+      <span style="color:#888;">→</span>
+      <span style="background:#16213e;color:#e2b04a;padding:6px 14px;border-radius:6px;">📋 节奏选择</span>
+    </div>
+
+    <div style="background:#1a1a2e;border-radius:8px;padding:16px;margin-bottom:16px;border:1px solid #e2b04a;">
+      <div style="color:#e2b04a;font-weight:bold;margin-bottom:8px;">🧬 开局阶段</div>
+      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+        <span style="background:#0f3460;padding:4px 10px;border-radius:4px;">选择种族</span> →
+        <span style="background:#0f3460;padding:4px 10px;border-radius:4px;">选择身份</span> →
+        <span style="background:#0f3460;padding:4px 10px;border-radius:4px;">选择愿景</span> →
+        <span style="background:#0f3460;padding:4px 10px;border-radius:4px;">🎴 抽天赋卡</span> →
+        <span style="background:#0f3460;padding:4px 10px;border-radius:4px;">📊 属性加点</span>
+      </div>
+    </div>
+
+    <div style="background:#1a1a2e;border-radius:8px;padding:16px;margin-bottom:16px;border:1px solid #00ff88;">
+      <div style="color:#00ff88;font-weight:bold;margin-bottom:8px;">🎭 人生模拟（循环）</div>
+      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;align-items:center;">
+        <span style="background:#0f3460;padding:4px 10px;border-radius:4px;">阶段开始</span> →
+        <span style="background:#0f3460;padding:4px 10px;border-radius:4px;">🎲 抽取事件 2-3个</span> →
+        <span style="background:#0f3460;padding:4px 10px;border-radius:4px;">👆 玩家选择</span> →
+        <span style="background:#0f3460;padding:4px 10px;border-radius:4px;">📈 属性结算</span> →
+        <span style="background:#0f3460;padding:4px 10px;border-radius:4px;">下一阶段</span>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:24px;">
+      <span style="background:#16213e;color:#e2b04a;padding:6px 14px;border-radius:6px;">💀 死亡/结局</span>
+      <span style="color:#888;">→</span>
+      <span style="background:#16213e;color:#e2b04a;padding:6px 14px;border-radius:6px;">🏆 结局画面</span>
+    </div>
+
+  </div>
+</div>
+
+<p style="color:#888;font-size:13px;">精简型（5阶段）：幼年→少年→青年→中年→老年 | 标准型（8阶段）：婴儿→童年→少年→青年→壮年→中年→中老年→老年</p>

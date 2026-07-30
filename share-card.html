@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人生重开模拟器 · 分享卡片</title>
+<style>
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    text-align: center; padding: 40px 16px;
+    background: #0d0d0d;
+    color: #ccc;
+  }
+  canvas { border-radius: 12px; box-shadow: 0 4px 32px rgba(201,168,76,0.2); max-width: 90vw; }
+  button {
+    margin-top: 20px; padding: 14px 40px; font-size: 17px;
+    background: #c9a84c; color: #0d0d0d; border: none; border-radius: 14px;
+    cursor: pointer; font-weight: 600; font-family: "Times New Roman", serif;
+  }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  p { color: #666; margin-top: 12px; font-size: 14px; }
+</style>
+</head>
+<body>
+<h2 style="color:#c9a84c;font-family:'Times New Roman',serif;letter-spacing:4px;">人生重开模拟器 分享卡片</h2>
+<canvas id="c"></canvas>
+<p>点击下载 PNG，上传到托管平台作为 og:image</p>
+<button id="dl-btn" onclick="downloadPNG()" disabled>加载中…</button>
+<script>
+// === CONFIGURATION ===
+const CONFIG = {
+  url: "https://life-restart-simulator-a7b.pages.dev/",
+  title: "人生重开模拟器",
+  subtitle: "暗黑奇幻世界 · 重启你的人生",
+  features: ["🧬  五大种族，暗黑奇幻世界观",
+            "🎴  天赋抽卡，传说史诗诅咒",
+            "⚔️  四种难度，大逆风到龙傲天",
+            "📖  四十个丰富人生事件",
+            "🏆  多重结局，SS~D 评分"],
+  primaryColor: "#c9a84c",
+  primaryLight: "#3a3520",
+  bgDark: "#0d0d0d",
+  bgCard: "#1a1a2e",
+  bgMid: "#12121f",
+};
+
+const W = 1200, H = 1600;
+const canvas = document.getElementById("c");
+canvas.width = W; canvas.height = H;
+const ctx = canvas.getContext("2d");
+
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+function draw(qrImg) {
+  const c = CONFIG;
+
+  // Dark background
+  ctx.fillStyle = c.bgDark;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle gradient overlay
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#1a1a2e"); g.addColorStop(1, c.bgDark);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  // Decorative circles — gold, dim, mystical
+  ctx.globalAlpha = 0.06;
+  [
+    { x: 200, y: 400, r: 280, f: c.primaryColor },
+    { x: 1000, y: 300, r: 180, f: c.primaryColor },
+    { x: 1050, y: 1200, r: 320, f: c.primaryColor },
+    { x: 150, y: 1300, r: 160, f: c.primaryColor },
+    { x: 600, y: 200, r: 100, f: c.primaryColor },
+    { x: 400, y: 900, r: 60, f: c.primaryColor },
+  ].forEach(d => { ctx.fillStyle = d.f; ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill(); });
+  ctx.globalAlpha = 1;
+
+  // Starry dots
+  ctx.globalAlpha = 0.3;
+  ctx.fillStyle = c.primaryColor;
+  for (let i = 0; i < 60; i++) {
+    const sx = 80 + Math.random() * (W - 160);
+    const sy = 80 + Math.random() * (H - 160);
+    ctx.beginPath(); ctx.arc(sx, sy, 1.5 + Math.random() * 2.5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Dark content card
+  ctx.fillStyle = c.bgCard;
+  ctx.shadowColor = "rgba(201,168,76,0.15)"; ctx.shadowBlur = 60; ctx.shadowOffsetY = 8;
+  rr(ctx, 90, 220, W - 180, H - 560, 40); ctx.fill();
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+  // Gold border for card
+  ctx.strokeStyle = "rgba(201,168,76,0.3)"; ctx.lineWidth = 2;
+  rr(ctx, 90, 220, W - 180, H - 560, 40); ctx.stroke();
+
+  // Top decorative line
+  ctx.strokeStyle = c.primaryColor; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(200, 120); ctx.lineTo(W - 200, 120); ctx.stroke();
+
+  // Title
+  ctx.fillStyle = c.primaryColor;
+  ctx.font = "bold 88px 'Times New Roman', 'Songti SC', 'SimSun', serif";
+  ctx.textAlign = "center";
+  ctx.fillText(c.title, W / 2, 390);
+
+  // Fantasy emoji row
+  ctx.font = "80px sans-serif";
+  ctx.fillText("🧝  🐉  ⚔️  🧙  🛡️  🌑", W / 2, 530);
+
+  // Subtitle
+  ctx.fillStyle = "#888";
+  ctx.font = "42px -apple-system, 'PingFang SC', 'Songti SC', sans-serif";
+  ctx.fillText(c.subtitle, W / 2, 640);
+
+  // Gold dashed divider
+  ctx.strokeStyle = c.primaryLight; ctx.lineWidth = 2;
+  ctx.setLineDash([14, 10]);
+  ctx.beginPath(); ctx.moveTo(200, 720); ctx.lineTo(W - 200, 720); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Feature list
+  ctx.fillStyle = "#aaa";
+  ctx.font = "36px -apple-system, 'PingFang SC', sans-serif";
+  c.features.forEach((f, i) => ctx.fillText(f, W / 2, 820 + i * 88));
+
+  // Bottom slogan
+  ctx.fillStyle = c.primaryColor;
+  ctx.font = "italic 34px 'Times New Roman', 'Songti SC', serif";
+  ctx.fillText("— 每一次选择，都是新的人生 —", W / 2, 1310);
+
+  // QR code
+  if (qrImg) {
+    const qs = 260, qx = (W - qs) / 2, qy = H - 370;
+    ctx.fillStyle = "#FFF";
+    rr(ctx, qx - 24, qy - 24, qs + 48, qs + 48, 32); ctx.fill();
+    ctx.strokeStyle = c.primaryColor; ctx.lineWidth = 2;
+    rr(ctx, qx - 24, qy - 24, qs + 48, qs + 48, 32); ctx.stroke();
+    ctx.drawImage(qrImg, qx, qy, qs, qs);
+  }
+
+  // Bottom hint
+  ctx.fillStyle = "#666";
+  ctx.font = "26px -apple-system, 'PingFang SC', sans-serif";
+  ctx.fillText("扫码或长按识别 · 开启暗黑奇幻人生", W / 2, H - 40);
+
+  document.getElementById("dl-btn").disabled = false;
+  document.getElementById("dl-btn").textContent = "下载 PNG";
+}
+
+const qr = new Image();
+qr.crossOrigin = "anonymous";
+qr.onload = () => draw(qr);
+qr.onerror = () => {
+  document.getElementById("dl-btn").disabled = false;
+  document.getElementById("dl-btn").textContent = "下载 PNG (无二维码)";
+  draw(null);
+};
+qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=" + encodeURIComponent(CONFIG.url) + "&margin=8";
+
+function downloadPNG() {
+  const a = document.createElement("a");
+  a.download = "life-restart-share-card.png";
+  a.href = canvas.toDataURL("image/png");
+  a.click();
+}
+</script>
+</body>
+</html>
