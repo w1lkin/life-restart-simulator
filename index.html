@@ -1,0 +1,2395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0">
+<title>人生重开模拟器</title>
+<style>
+/* === Reset & Base === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0d0d0d;
+  color: #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 16px;
+}
+#app {
+  width: 100%;
+  max-width: 420px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === Typography === */
+h1, h2, h3 { font-family: "Times New Roman", "Songti SC", "SimSun", serif; }
+h1 { font-size: 32px; color: #c9a84c; letter-spacing: 6px; text-align: center; }
+h2 { font-size: 22px; color: #c9a84c; margin-bottom: 12px; }
+h3 { font-size: 16px; color: #c9a84c; margin-bottom: 8px; }
+.subtitle { font-size: 13px; color: #666; margin-bottom: 20px; text-align: center; }
+
+/* === Cards === */
+.card {
+  background: #1a1a2e;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  touch-action: manipulation;
+}
+.card:hover, .card.selected { border-color: #c9a84c; }
+.card.selected { box-shadow: 0 0 8px rgba(201,168,76,0.3); }
+.card.disabled { opacity: 0.4; pointer-events: none; }
+
+/* === Card Grid === */
+.card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.card-grid.single-col { grid-template-columns: 1fr; }
+
+/* === Buttons === */
+.btn {
+  display: block; width: 100%; padding: 14px;
+  border: 1px solid #c9a84c; border-radius: 8px;
+  background: transparent; color: #c9a84c;
+  font-size: 16px; font-family: "Times New Roman", serif;
+  cursor: pointer; text-align: center; margin-bottom: 10px;
+  transition: background 0.2s, color 0.2s;
+}
+.btn:hover { background: #c9a84c; color: #0d0d0d; }
+.btn.primary { background: #c9a84c; color: #0d0d0d; }
+.btn.secondary { border-color: #555; color: #888; }
+.btn.secondary:hover { background: #555; color: #fff; }
+.btn.danger { border-color: #c41e3a; color: #c41e3a; }
+.btn.danger:hover { background: #c41e3a; color: #fff; }
+.btn:disabled { opacity: 0.3; pointer-events: none; }
+
+/* === Attribute Row === */
+.attr-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid #1a1a2e;
+}
+.attr-name { font-size: 14px; color: #ccc; }
+.attr-value { font-size: 14px; color: #c9a84c; font-weight: bold; }
+.attr-controls { display: flex; gap: 8px; align-items: center; }
+.attr-btn {
+  width: 32px; height: 32px; border: 1px solid #555; border-radius: 4px;
+  background: transparent; color: #ccc; font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.attr-btn:hover { border-color: #c9a84c; color: #c9a84c; }
+.attr-btn:disabled { opacity: 0.2; pointer-events: none; }
+
+/* === Tags === */
+.tag {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; margin-right: 4px;
+}
+.tag-positive { background: #1a3a1a; color: #4caf50; border: 1px solid #2a5a2a; }
+.tag-negative { background: #3a1a1a; color: #f44336; border: 1px solid #5a2a2a; }
+.tag-gold { background: #2a2a1a; color: #c9a84c; border: 1px solid #4a4a2a; }
+.tag-locked { background: #1a1a1a; color: #666; border: 1px solid #333; }
+
+/* Talent rarity tags */
+.tag-legendary { background: #2a1a0a; color: #ff8c00; border: 1px solid #5a3a1a; }
+.tag-epic { background: #1a0a2a; color: #b44dff; border: 1px solid #3a1a5a; }
+.tag-rare { background: #0a1a2a; color: #4da6ff; border: 1px solid #1a3a5a; }
+.tag-cursed { background: #3a0a0a; color: #ff4444; border: 1px solid #5a1a1a; }
+
+/* === Narrative Box === */
+.narrative {
+  background: #1a1a2e; border-left: 3px solid #c9a84c;
+  padding: 16px; border-radius: 4px; margin-bottom: 16px;
+  font-style: italic; font-size: 14px; line-height: 1.7;
+}
+
+/* === Progress Bar === */
+.progress-bar {
+  width: 100%; height: 4px; background: #1a1a2e; border-radius: 2px;
+  margin-bottom: 16px;
+}
+.progress-fill { height: 100%; background: #c9a84c; border-radius: 2px; transition: width 0.3s; }
+
+/* === Footer Info === */
+.stage-info {
+  display: flex; justify-content: space-between;
+  font-size: 12px; color: #666; margin-bottom: 12px;
+}
+
+/* === Options List === */
+.option-item {
+  background: #1a1a2e; border: 1px solid #2a2a2a; border-radius: 6px;
+  padding: 12px; margin-bottom: 8px; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.option-item:hover { border-color: #c9a84c; }
+.option-item.locked { opacity: 0.5; cursor: not-allowed; border-color: #333; }
+.option-text { font-size: 14px; margin-bottom: 4px; }
+.option-effects { font-size: 12px; }
+.effect-pos { color: #4caf50; }
+.effect-neg { color: #f44336; }
+.effect-neutral { color: #888; }
+
+/* === Reroll Button === */
+.reroll-info { text-align: center; font-size: 13px; color: #888; margin: 8px 0; }
+
+/* === History List === */
+.history-item {
+  background: #1a1a2e; border: 1px solid #2a2a2a; border-radius: 8px;
+  padding: 12px; margin-bottom: 8px;
+}
+.history-title { font-size: 16px; color: #c9a84c; }
+.history-meta { font-size: 12px; color: #666; margin-top: 4px; }
+
+/* === Scrollable content === */
+.screen-content { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+
+/* === Score display === */
+.score-badge {
+  display: inline-block; padding: 4px 12px; border-radius: 4px;
+  font-size: 13px; font-weight: bold;
+}
+.score-SS { background: #c9a84c; color: #0d0d0d; }
+.score-S  { background: #d4a574; color: #0d0d0d; }
+.score-A  { background: #4caf50; color: #fff; }
+.score-B  { background: #2196f3; color: #fff; }
+.score-C  { background: #ff9800; color: #fff; }
+.score-D  { background: #f44336; color: #fff; }
+
+/* === Ending Screen === */
+.ending-header { text-align: center; margin-bottom: 24px; }
+.ending-title { font-size: 28px; color: #c9a84c; letter-spacing: 4px; margin-bottom: 8px; }
+.ending-grade { font-size: 64px; color: #c9a84c; margin: 16px 0; text-align: center; }
+.ending-narrative {
+  background: #1a1a2e; border-radius: 8px; padding: 16px;
+  font-style: italic; line-height: 1.8; text-align: center; margin-bottom: 20px;
+}
+/* === Share === */
+.share-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 200; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 24px;
+}
+.share-overlay.active { display: flex; }
+.share-card-img {
+  max-width: 90vw; max-height: 70vh;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(201,168,76,0.25);
+  object-fit: contain;
+}
+.share-hint {
+  color: #ccc; font-size: 14px; margin-top: 16px;
+  text-align: center; opacity: 0.85;
+}
+.share-close {
+  color: #ccc; background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.25); padding: 10px 32px;
+  border-radius: 24px; font-size: 15px; cursor: pointer; margin-top: 16px;
+}
+.btn-share {
+  background: none; color: #888;
+  border: 1.5px dashed #555;
+  padding: 10px 16px; border-radius: 14px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: transform 0.15s;
+  width: 100%; margin-bottom: 10px;
+}
+.btn-share:active { transform: scale(0.95); }
+.btn-share:hover { border-color: #888; color: #ccc; }
+
+
+
+@media (max-width: 374px) {
+  body { padding: 8px; }
+  h1 { font-size: 24px; }
+  .card { padding: 12px; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// === Game State ===
+const state = {
+  screen: 'title',          // 当前屏幕
+  difficulty: '',           // 难度
+  rhythm: '',               // 节奏: 'compact' | 'standard'
+  race: '',                 // 种族 id
+  identity: '',             // 身份 id
+  vision: '',               // 愿景 id
+  talents: [],              // 已选天赋 id 列表
+  attrs: {                  // 当前属性
+    力量: 10, 智慧: 10, 魅力: 10, 敏捷: 10, 体质: 10, 运气: 10,
+    财富: 100, 声望: 0, 道德: 0
+  },
+  stageIndex: 0,            // 当前阶段序号
+  drawnTalents: [],         // 当前抽到的天赋卡
+  remainingRerolls: 0,      // 剩余重roll次数
+  allocPoints: 0,           // 剩余可分配点数
+  selectedTalents: [],      // 本轮选中的天赋
+  currentEvents: [],        // 当前阶段事件
+  completedEvents: [],      // 已完成事件 ID
+  storyFlags: {},           // 叙事标记 — 追踪关键选择，解锁后续事件链
+  eventLog: [],             // 瀑布流历史 — 已完成的每个事件及其选择结果
+  loadingNext: false,       // 事件间加载状态
+};
+
+// === Game Data ===
+
+// 节奏配置
+const RHYTHMS = {
+  compact: {
+    name: '精简型',
+    desc: '5个阶段，快速过完一生',
+    stages: ['幼年', '少年', '青年', '中年', '老年'],
+  },
+  standard: {
+    name: '标准型',
+    desc: '8个阶段，完整人生体验',
+    stages: ['婴儿', '童年', '少年', '青年', '壮年', '中年', '中老年', '老年'],
+  },
+};
+
+// 难度配置
+const DIFFICULTIES = {
+  hard: {
+    name: '大逆风', icon: '🔴',
+    desc: '步步惊心，活着就是胜利',
+    attrMultiplier: 0.5, drawCount: 5, pickCount: 1,
+    negativeBias: true, eventBias: 'negative', rerolls: 0, allocPoints: 5,
+  },
+  normal: {
+    name: '普通', icon: '🟡',
+    desc: '平凡之路，自己书写命运',
+    attrMultiplier: 1.0, drawCount: 5, pickCount: 2,
+    negativeBias: false, eventBias: 'neutral', rerolls: 1, allocPoints: 15,
+  },
+  easy: {
+    name: '顺风', icon: '🟢',
+    desc: '顺风顺水，前途一片光明',
+    attrMultiplier: 1.2, drawCount: 6, pickCount: 3,
+    negativeBias: false, eventBias: 'positive', rerolls: 2, allocPoints: 22,
+  },
+  heaven: {
+    name: '龙傲天', icon: '👑',
+    desc: '天命所归，世间无敌',
+    attrMultiplier: 1.5, drawCount: 7, pickCount: 3,
+    negativeBias: false, eventBias: 'lucky', rerolls: 3, allocPoints: 30,
+  },
+};
+
+// 种族数据
+const RACES = {
+  human: {
+    id: 'human', name: '人类', icon: '👤',
+    desc: '大陆上最普遍的种族，适应性极强，在各领域均有建树。',
+    bonuses: { 力量: 2, 智慧: 2, 魅力: 2, 敏捷: 2, 体质: 2, 运气: 2 },
+  },
+  elf: {
+    id: 'elf', name: '精灵', icon: '🧝',
+    desc: '古老的森林种族，寿命悠长，天生与魔法共鸣。',
+    bonuses: { 智慧: 5, 魅力: 3, 体质: -2 },
+  },
+  dwarf: {
+    id: 'dwarf', name: '矮人', icon: '🧔',
+    desc: '山中之民，以锻造和烈酒闻名，身体如磐石般坚韧。',
+    bonuses: { 力量: 5, 体质: 3, 魅力: -2 },
+  },
+  dragonborn: {
+    id: 'dragonborn', name: '龙裔', icon: '🐉',
+    desc: '远古龙族的后裔，血液中流淌着龙之力，稀有而强大。',
+    bonuses: { 力量: 4, 体质: 3, 魅力: 3, 智慧: -3 },
+  },
+  darkelf: {
+    id: 'darkelf', name: '暗精灵', icon: '🌑',
+    desc: '地底世界的住民，暗影的宠儿，致命而优雅。',
+    bonuses: { 敏捷: 5, 智慧: 3, 魅力: -2 },
+  },
+};
+
+// 身份数据 — 每个种族独立定义
+const IDENTITIES = {
+  human: [
+    { id: 'human_noble', name: '贵族后裔', desc: '出身显赫，自小锦衣玉食。', bonuses: { 魅力: 3, 声望: 20, 财富: 400 } },
+    { id: 'human_crafter', name: '工匠子弟', desc: '父亲是城中知名铁匠。', bonuses: { 智慧: 3, 力量: 2, 财富: 150 } },
+    { id: 'human_commoner', name: '平民出身', desc: '普通人家，一切靠自己。', bonuses: { 财富: 50 } },
+  ],
+  elf: [
+    { id: 'elf_noble', name: '月之贵族', desc: '精灵王庭的远支血脉。', bonuses: { 魅力: 4, 声望: 30, 财富: 300 } },
+    { id: 'elf_warden', name: '森林巡者', desc: '守护森林的巡林人家族。', bonuses: { 敏捷: 4, 智慧: 2, 财富: 100 } },
+    { id: 'elf_exile', name: '流亡者', desc: '因故被放逐的精灵后裔。', bonuses: { 敏捷: 3, 道德: -10, 财富: 30 } },
+  ],
+  dwarf: [
+    { id: 'dwarf_smith', name: '锻造世家', desc: '世代相传的铁匠家族。', bonuses: { 力量: 4, 财富: 250, 声望: 10 } },
+    { id: 'dwarf_warrior', name: '战士氏族', desc: '山中之城的守卫者血统。', bonuses: { 力量: 3, 体质: 3, 声望: 15, 财富: 80 } },
+    { id: 'dwarf_miner', name: '矿工子弟', desc: '在矿脉中长大的坚韧之人。', bonuses: { 体质: 4, 财富: 60 } },
+  ],
+  dragonborn: [
+    { id: 'dragon_clan', name: '龙族嫡系', desc: '纯正的龙族血脉继承者。', bonuses: { 力量: 5, 声望: 25, 财富: 500 } },
+    { id: 'dragon_wanderer', name: '流浪龙裔', desc: '远离族群的独行龙裔。', bonuses: { 体质: 3, 力量: 2, 财富: 30 } },
+    { id: 'dragon_outcast', name: '混血弃儿', desc: '不被纯血龙裔承认的混血。', bonuses: { 魅力: 3, 道德: -5, 财富: 20 } },
+  ],
+  darkelf: [
+    { id: 'darkelf_shadow', name: '影刃家族', desc: '地底暗杀者行会的成员。', bonuses: { 敏捷: 5, 声望: -5, 财富: 200 } },
+    { id: 'darkelf_scholar', name: '地底学者', desc: '研究禁忌魔法的学者世家。', bonuses: { 智慧: 4, 财富: 120 } },
+    { id: 'darkelf_slave', name: '获释奴隶', desc: '从地底角斗场逃出生天。', bonuses: { 体质: 4, 道德: 10, 财富: 10 } },
+  ],
+};
+
+// 愿景数据
+const VISIONS = [
+  { id: 'hero', name: '传说勇者', icon: '⚔️', desc: '击败魔王，拯救世界。', condition: { 力量: 150, 声望: 500 } },
+  { id: 'sage', name: '大贤者', icon: '🧙', desc: '智慧通神，触碰真理之门。', condition: { 智慧: 150 } },
+  { id: 'wealthy', name: '富可敌国', icon: '💰', desc: '积累足以买下一个国家的财富。', condition: { 财富: 100000 } },
+  { id: 'shadow', name: '暗影之主', icon: '🗡️', desc: '成为地底世界真正的主宰。', condition: { 敏捷: 130, 道德: -80 } },
+  { id: 'saint', name: '圣者', icon: '✨', desc: '以善行感化世间。', condition: { 魅力: 120, 道德: 80, 声望: 600 } },
+  { id: 'immortal', name: '不死传说', icon: '💀', desc: '超越死亡，名垂千古。', condition: { 体质: 160 } },
+  { id: 'dragonSlayer', name: '屠龙者', icon: '🐲', desc: '以凡人之躯斩杀远古巨龙。', condition: { 力量: 140, 敏捷: 100 } },
+  { id: 'adventurer', name: '传奇探险家', icon: '🗺️', desc: '踏遍世界每一个角落。', condition: { 敏捷: 120, 运气: 100 } },
+  { id: 'king', name: '万王之王', icon: '👑', desc: '统一大陆，加冕为王。', condition: { 声望: 800, 魅力: 130 } },
+  { id: 'peaceful', name: '平凡幸福', icon: '🏡', desc: '无需惊天动地，只求一生安稳。', condition: { 运气: 80, 道德: 40 } },
+];
+
+// 天赋卡数据
+const TALENTS = [
+  // 传说天赋
+  { id: 't_lck', name: '天选之人', type: 'legendary', desc: '命运之神眷顾于你。', effects: { 运气: 20 } },
+  { id: 't_dragon', name: '龙族血统', type: 'legendary', desc: '血脉中觉醒的龙之力。', effects: { 力量: 8, 体质: 5, 魅力: 3 } },
+  { id: 't_divineBless', name: '神圣祝福', type: 'legendary', desc: '天界的祝福加持于你。', effects: { 魅力: 8, 道德: 20, 运气: 5 } },
+  // 史诗天赋
+  { id: 't_str', name: '天生神力', type: 'epic', desc: '你的力量远超常人。', effects: { 力量: 15 } },
+  { id: 't_int', name: '过目不忘', type: 'epic', desc: '任何知识过眼即记。', effects: { 智慧: 15 } },
+  { id: 't_chr', name: '倾城之姿', type: 'epic', desc: '美貌令人无法移开目光。', effects: { 魅力: 15 } },
+  { id: 't_agi', name: '矫健如风', type: 'epic', desc: '身手敏捷，来去如电。', effects: { 敏捷: 15 } },
+  { id: 't_con', name: '钢筋铁骨', type: 'epic', desc: '身体坚固如城堡。', effects: { 体质: 15 } },
+  { id: 't_business', name: '商业奇才', type: 'epic', desc: '赚钱对你来说轻而易举。', effects: { 财富: 500, 智慧: 3 } },
+  { id: 't_spellborn', name: '魔法之子', type: 'epic', desc: '生来就与魔法之流共鸣。', effects: { 智慧: 10, 运气: 5 } },
+  { id: 't_berserker', name: '狂战士之血', type: 'epic', desc: '受伤越重越强。', effects: { 力量: 10, 体质: 5 } },
+  { id: 't_ancientScroll', name: '上古卷轴', type: 'epic', desc: '记载着失传的知识。', effects: { 智慧: 12, 声望: 20 } },
+  // 稀有天赋
+  { id: 't_nobleSoul', name: '高贵灵魂', type: 'rare', desc: '人们自然而然地敬重你。', effects: { 声望: 50, 魅力: 5 } },
+  { id: 't_ironWill', name: '钢铁意志', type: 'rare', desc: '没有什么能击垮你。', effects: { 体质: 8, 力量: 5 } },
+  { id: 't_shadowStep', name: '影步', type: 'rare', desc: '暗影随你而行。', effects: { 敏捷: 10, 运气: 5 } },
+  { id: 't_goldenTongue', name: '金舌头', type: 'rare', desc: '说服任何人做任何事。', effects: { 魅力: 10, 财富: 200 } },
+  { id: 't_luckyCoin', name: '幸运金币', type: 'rare', desc: '一枚似乎永远不会用完的金币。', effects: { 运气: 8, 财富: 300 } },
+  { id: 't_elfBlood', name: '精灵血脉', type: 'rare', desc: '你的血统中混有远古精灵之血。', effects: { 敏捷: 8, 智慧: 5, 魅力: 3 } },
+  { id: 't_giantStrength', name: '巨人末裔', type: 'rare', desc: '巨人族的血脉在你体内流淌。', effects: { 力量: 10, 体质: 6, 敏捷: -2 } },
+  { id: 't_adventurous', name: '冒险精神', type: 'rare', desc: '你永远不会安于现状。', effects: { 运气: 8, 敏捷: 5 } },
+  // 诅咒天赋
+  { id: 'tn_weak', name: '体弱多病', type: 'cursed', desc: '从小药罐子不离身。', effects: { 体质: -12 } },
+  { id: 'tn_shy', name: '社交恐惧', type: 'cursed', desc: '人群让你窒息。', effects: { 魅力: -12 } },
+  { id: 'tn_cursed', name: '厄运缠身', type: 'cursed', desc: '似乎总有人在暗处盯着你。', effects: { 运气: -15 } },
+  { id: 'tn_spendthrift', name: '挥霍无度', type: 'cursed', desc: '钱在手里留不住三天。', effects: { 财富: -300 } },
+  { id: 'tn_cursedMark', name: '诅咒印记', type: 'cursed', desc: '一个古老的诅咒刻在你身上。', effects: { 运气: -8, 魅力: -5 } },
+  { id: 'tn_frail', name: '脆骨症', type: 'cursed', desc: '骨头像玻璃一样易碎。', effects: { 力量: -10, 体质: -5 } },
+  { id: 'tn_dull', name: '思维迟钝', type: 'cursed', desc: '理解东西总是比别人慢。', effects: { 智慧: -12 } },
+  { id: 'tn_clumsy', name: '笨手笨脚', type: 'cursed', desc: '仿佛上天忘了给你运动神经。', effects: { 敏捷: -12 } },
+  { id: 'tn_outcast', name: '被放逐者', type: 'cursed', desc: '人们看你的时候眼神总是怪怪的。', effects: { 声望: -30, 魅力: -5 } },
+  { id: 'tn_debt', name: '一贫如洗', type: 'cursed', desc: '除了身上的衣服，你一无所有。', effects: { 财富: -100 } },
+];
+
+// === 事件数据 ===
+const EVENTS = [
+  // ===== 婴儿/幼年 =====
+  {
+    id: 'baby_01', stages: ['婴儿', '幼年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 10, title: '第一次开口',
+    narrative: '阳光透过窗棂洒在木地板上，母亲把你抱在膝头，轻声哼唱着古老的摇篮曲。你的喉咙里涌起一股奇异的冲动——仿佛有千言万语堵在胸口，急于挣脱而出。家人们围成一圈，屏住呼吸，等待着。',
+    options: [
+      { text: '喊"妈妈"', require: {}, effects: { 魅力: 3, 道德: 2 }, narrative: '"妈妈——" 声音清脆如银铃。母亲一把将你搂进怀里，滚烫的泪水滴在你的脸颊上。从那天起，你便知道，这个世界上有人会无条件地爱你。' },
+      { text: '喊"爸爸"', require: {}, effects: { 魅力: 2, 力量: 2 }, narrative: '"爸爸！" 你的声音洪亮而坚定。父亲愣了一瞬，随即大笑着将你举过头顶，在屋子里转了三圈。他的手臂强壮有力，让你第一次感受到了什么是安全。' },
+      { text: '保持沉默', require: {}, effects: { 智慧: 3 }, narrative: '你张了张嘴，最终什么也没说。只是静静地望着窗外飞过的鸟儿。大人们有些失望，但你那双清澈的眼睛里，似乎倒映着某种远超年龄的沉静。' },
+    ],
+  },
+  {
+    id: 'baby_02', stages: ['婴儿', '幼年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 8, title: '意外发现',
+    narrative: '你在家中的旧木箱里翻到了一件被遗忘的物什——它静静地躺在积灰的角落，表面布满划痕，但隐约透出一丝微弱的光芒，像是在等待什么人发现它。',
+    options: [
+      { text: '拿给大人看', require: {}, effects: { 魅力: 3, 声望: 5 }, narrative: '父亲接过那东西，脸色骤变。"这是……家族失传的徽章！"消息很快在小镇上传开，人们开始用一种新的眼光看你——你不仅是那个普通的孩子了。' },
+      { text: '偷偷藏起来', require: {}, effects: { 敏捷: 3, 道德: -2 }, narrative: '你飞快地把东西塞进衣兜里，心跳如擂鼓。这是属于你的秘密——一个只有你自己知道的小小宝藏。但从那天起，你学会了如何保守秘密。' },
+    ],
+  },
+  {
+    id: 'baby_03', stages: ['婴儿', '幼年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 8, title: '玩伴',
+    narrative: '初夏的午后，蝉鸣如潮。邻居家的孩子站在你家院子的篱笆外，手里攥着一只纸做的风车，怯生生地向你招手。空气里飘着金银花的香气。',
+    options: [
+      { text: '一起玩游戏', require: {}, effects: { 魅力: 3, 运气: 2 }, narrative: '你们在草地上追逐嬉戏，直到夕阳把影子拉得老长。临走时，他把风车送给了你。那成了你们友谊的信物，也让你明白了——与人分享的快乐，是加倍的。' },
+      { text: '独自看书', require: {}, effects: { 智慧: 4, 魅力: -1 }, narrative: '你摇了摇头，低头继续翻看手里那本泛黄的故事书。书里的世界太精彩了——喷火的巨龙、会说话的白马、永不落山的月亮……你不需要玩伴，至少现在不需要。' },
+    ],
+  },
+  {
+    id: 'baby_04', stages: ['婴儿'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, title: '洗礼仪式',
+    narrative: '古老的石板教堂里，烛光摇曳，管风琴的低鸣在穹顶间回响。白袍牧师用圣水在你额前画下一个发光的符文。整个仪式庄严肃穆，仿佛连空气都凝固了。在场的人都说，圣水落在你身上时，烛火忽然亮了三分。',
+    options: [
+      { text: '接受祝福', require: {}, effects: { 运气: 5, 道德: 3 }, narrative: '圣水触及皮肤的一瞬间，你感到一股暖流从头顶蔓延至脚尖。牧师低声说："这孩子受到了神明的注视。"在场的信徒纷纷跪拜。' },
+      { text: '家人不愿参加', require: {}, effects: { 道德: -2 }, narrative: '你的家人对教会向来看法复杂。他们最终没有带你去参加洗礼。没有祝福，便没有束缚。你的人生，从一开始就不在任何神明的规划之中。' },
+    ],
+  },
+
+  // ===== 童年 =====
+  {
+    id: 'child_01', stages: ['幼年', '童年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 10, title: '启蒙教育',
+    narrative: '一位云游四方的灰袍学者路过小镇，在广场的梧桐树下支起了一块黑板。他的胡须花白，眼睛却亮得像星星。"知识是唯一不会背叛你的财富，"他环顾四周，"谁愿意来听我讲一天课？"',
+    options: [
+      { text: '认真学习', require: {}, effects: { 智慧: 8, 声望: 5 }, narrative: '你坐在最前面，如饥似渴地记下每一个字。放学后，学者单独留下了你，从怀中掏出一本手抄的羊皮卷。"你不属于这里，"他说，"世界很大，你的路还很长。"那本书成了你最珍贵的宝物。' },
+      { text: '逃课去玩', require: {}, effects: { 敏捷: 5, 运气: 3 }, narrative: '黑板上的字太无聊了，外面的阳光却正好。你悄悄溜出人群，跑进了树林。你在溪边发现了一窝兔子，在山坡上找到了野草莓。这不是书本上的知识，但大自然教会了你另一种智慧。' },
+      { text: '帮家里干活', require: {}, effects: { 力量: 5, 体质: 3, 道德: 3 }, narrative: '你没有去听课。家里还有一堆柴要劈，水缸也见底了。当你满头大汗地把最后一捆柴码好时，母亲的眼睛红了。"好孩子，"她轻声说，"你真的帮了大忙。"' },
+    ],
+  },
+  {
+    id: 'child_02', stages: ['幼年', '童年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 8, title: '小镇集市',
+    narrative: '一年一度的春之集市来了！街道两旁挤满了商贩，卖香料的矮人、兜售魔法卷轴的精灵学徒、来自东方沙漠的丝绸商……空气里混杂着烤肉、蜂蜜酒和某种不知名的辛辣香气。你攥着口袋里仅有的几枚铜币，眼睛不够用了。',
+    options: [
+      { text: '观看角斗表演', require: {}, effects: { 力量: 5 }, narrative: '竞技场中央，两个角斗士正在激烈交锋。剑与盾碰撞的火花四溅，观众的欢呼如山呼海啸。你在最前排看得热血沸腾。散场后，你在后院用木棍偷偷练了一整个夏天。' },
+      { text: '逛魔法摊位', require: {}, effects: { 智慧: 5 }, narrative: '魔法摊位上的精灵学徒正在演示一个入门级法术。一枚小小的光球悬浮在他的掌心，变幻着七彩的颜色。你盯着看了半个时辰，心想：有一天，我也要学这个。' },
+      { text: '帮商贩打零工', require: {}, effects: { 财富: 50, 魅力: 2 }, narrative: '"小孩，帮我搬三箱货，给你五个铜板！"你二话不说挽起了袖子。忙活了整个下午，不仅赚了钱，还跟着商贩学到了几句讨价还价的门道。"你挺机灵的，"商贩说，"明年来找我。"' },
+    ],
+  },
+  {
+    id: 'child_03', stages: ['幼年', '童年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, title: '神秘梦境',
+    narrative: '连续七个夜晚，你做了同一个梦。梦里有一座悬浮在云海之上的黑色高塔，塔顶有一颗幽蓝色的宝石缓缓旋转。一个声音从塔中传来，呼唤着一个名字——你确信那不是你的名字，却莫名觉得熟悉。每次醒来，枕边都有一小撮发光的粉末。',
+    options: [
+      { text: '试图记住梦境', require: {}, effects: { 运气: 5, 智慧: 3 }, narrative: '你开始在枕边放纸笔，每次惊醒就立刻记下梦的细节。渐渐地，你发现了其中的规律——那不是随机的梦，而是一张拼图的碎片。你隐约感到，有什么巨大的秘密在等待你解开。' },
+      { text: '被吓到不敢睡觉', require: {}, effects: { 体质: -3, 智慧: 2 }, narrative: '恐惧如毒蛇般缠绕着你。你开始抗拒入睡，整夜睁着眼睛盯着天花板。大人们说你变得"神经兮兮"的。但你确实在黑暗中练就了一双警觉的眼睛——能分辨最细微的声响。' },
+    ],
+  },
+  {
+    id: 'child_04', stages: ['幼年', '童年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 7, title: '森林迷路',
+    narrative: '秋天的森林像一座金红色的迷宫。你和伙伴们玩捉迷藏，你跑得太远、太深了。回过神来，四周只有无尽的树干和斑驳的光影。远处隐约传来狼嚎，天色正在变暗。落叶在你的脚下沙沙作响。',
+    options: [
+      { text: '寻找出路', require: {}, effects: { 敏捷: 5, 智慧: 3 }, narrative: '你深吸一口气，强迫自己冷静。看苔藓的生长方向，听溪水的声音，追踪来时踩断的树枝……半个时辰后，你踉踉跄跄地走出了森林。大人们正焦急地举着火把准备进山。"这孩子有出息，"有人低声说。' },
+      { text: '等待救援', require: {}, effects: { 运气: 5 }, narrative: '你找了棵树靠着坐下，把脸埋进膝盖里。不知道过了多久，远处传来了犬吠和火光。搜救队找到你时，你已经快要睡着了。领队的老猎人拍了拍你的头："运气不错，今晚有月亮。"' },
+    ],
+  },
+
+  // ===== 少年 =====
+  {
+    id: 'youth_01', stages: ['少年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 10, title: '命运的抉择',
+    narrative: '你长大了。这一年春天，村里的长者把你叫到面前。"孩子，你的路在自己脚下。"他的拐杖在地上画了三条岔路，"每一条路都有代价，每一条路都有回报。选吧。"春风卷起花瓣，落在你摊开的手心里。',
+    options: [
+      { text: '加入冒险公会', require: {}, effects: { 力量: 10, 敏捷: 5 }, setFlag: 'guild', narrative: '你在羊皮纸上签下了自己的名字。冒险者公会的徽章沉甸甸地挂在你胸前——一把银色的剑与一面盾。从今天起，你不再只是谁家的小孩。你是冒险者，是即将踏上未知旅途的自由之人。' },
+      { text: '拜入魔法塔', require: { 智慧: 40 }, effects: { 智慧: 12, 声望: 10 }, setFlag: 'mage', narrative: '穿过古老石塔的大门，你闻到了羊皮纸和草药混合的气味。魔法师们审视着你，最终点了点头。"入塔第一课：忘记你过去学过的一切。"' },
+      { text: '继承家业', require: {}, effects: { 财富: 200, 体质: 3 }, narrative: '你没有选择远方的冒险，而是接过了父亲递来的工具。邻居们点头称赞："是个踏实的孩子。"你的手掌很快磨出了老茧，但家里的小生意在你手中慢慢红火了起来。' },
+    ],
+  },
+  {
+    id: 'youth_02', stages: ['少年'], minAttr: {}, vision: 'hero', difficulty: '',
+    weight: 15, title: '勇者试炼（愿景专属）',
+    narrative: '王都的钟声响彻云霄——那是勇者选拔的信号。上百名少年从大陆四方赶来，聚集在王城广场。白金铠甲的女将军站在高台上，她的声音如雷霆滚过人群："勇者，不是天生的。是炼成的。你们当中，也许只有一人能站着走到最后。"你的愿景在胸腔里熊熊燃烧。',
+    options: [
+      { text: '参加试炼', require: { 力量: 50 }, effects: { 力量: 15, 声望: 30, 体质: 8 }, narrative: '第一关：负重攀爬三千级石阶。你的腿在发抖，肺像着了火。但你没有停下。当你在暮色中终于爬到顶点时，女将军微微点了点头。"你通过了。"全场欢呼。' },
+      { text: '先去修炼', require: {}, effects: { 力量: 5, 智慧: 3 }, narrative: '你走到报名处，看了一眼试炼的内容，默默退了出来。现在还不是时候。你找了座僻静的山林，开始了自己的修行。明年的今天，你会再来——而且你一定会赢。' },
+    ],
+  },
+  {
+    id: 'youth_03', stages: ['少年'], minAttr: {}, vision: '', difficulty: 'hard',
+    weight: 20, title: '饥荒之年',
+    narrative: '那一年的冬天来得格外早。霜冻毁了秋收，粮仓见了底。你走在街道上，看见面黄肌瘦的人们蜷缩在墙角，眼神空洞地望着天空。有人开始卖儿鬻女，有人铤而走险。整个家乡像一艘正在沉没的船。',
+    options: [
+      { text: '外出狩猎', require: { 敏捷: 30 }, effects: { 敏捷: 8, 体质: 5, 财富: 50 }, narrative: '你背上弓，独自走进了白雪覆盖的森林。第一天，一无所获。第二天，零星几只野兔。第三天深夜，你扛着一头野猪走进了村子。"肉！是肉！"人们的眼睛亮了起来。那个冬天，你一个人养活了半个村子。' },
+      { text: '省下自己的口粮', require: {}, effects: { 体质: -8, 道德: 15, 声望: 10 }, narrative: '你把自己的面包掰成两半，一半给了隔壁奄奄一息的老奶奶。你瘦了很多，走路都在打晃，但每当你走过街道，人们会不自觉地站起来，向你脱帽致意。他们不说谢谢——他们把这份恩情记在了心里。' },
+      { text: '逃离家乡', require: {}, effects: { 敏捷: 5, 道德: -10 }, narrative: '你做了一个自私的决定，但也是一个活下去的决定。你收拾了几件衣服，乘着夜色逃离了家乡。走出很远之后，你回头看了一眼——那片土地的轮廓在月光下显得陌生而遥远。你没有回头。' },
+    ],
+  },
+  {
+    id: 'youth_04', stages: ['少年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 7, title: '初恋',
+    narrative: '那是在一个普普通通的黄昏。集市已经散了，你独自坐在石桥上，看着天边的云烧成橘红色。然后她出现了——提着裙子从石阶上跑下来，发梢被晚风吹得散乱，回头对你笑了一下。那一刻，世界忽然安静了。',
+    options: [
+      { text: '勇敢表达', require: { 魅力: 50 }, effects: { 魅力: 8, 运气: 5 }, setFlag: 'firstLove', narrative: '"等一等！"你追了上去，心跳比打了一架还快。她把一缕头发别到耳后，眼睛亮亮地看着你。你们在暮色中许下了青涩的诺言。许多年以后，你已经记不清她的脸，但还记得那天的风是甜的。' },
+      { text: '埋藏心底', require: {}, effects: { 智慧: 3 }, narrative: '你张了张嘴，最终什么也没说。她消失在街角，从此再没见过。很多年后你想起来，觉得那也许是最好的结局——有些美好，就应该留在记忆里，永不褪色。' },
+    ],
+  },
+  {
+    id: 'common_05', stages: ['少年', '青年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, title: '名师指点',
+    narrative: '镇上新来了一位退隐的剑圣——据说他曾在三十年前一剑劈开过山。如今他只是个喜欢在酒馆角落里喝闷酒的老人家，整天醉醺醺的，没人相信他的过去。但你蹲在他身边，听他断断续续讲的那些故事，总觉得这里面藏着真东西。有一天，他忽然对你说："小鬼，你想学吗？"',
+    options: [
+      { text: '拜师学艺', require: {}, effects: { 智慧: 8, 声望: 10, 财富: -100 }, narrative: '你用攒了很久的零花钱买了拜师酒。老人虽然嘴上嫌弃，但眼睛里的光出卖了他。每天早上天没亮，他就把你从被窝里拽出来练功。苦是苦，但你进步的速度连自己都惊讶。"你是我最后一个徒弟，"老人有一天说，语气忽然温柔了，"也是最好的。"' },
+      { text: '自学成才', require: {}, effects: { 智慧: 5, 运气: 3 }, narrative: '你觉得跟着一个醉醺醺的老头学不到什么。但你记住了他说的每一个要诀，偷偷对着树干练了三个月。虽然没有名师的指点，但你自己摸索出的招数反而带着独特的风格。老头最后一次见到你，哼了一声："还行。"对一位剑圣来说，这已经是最高的评价了。' },
+    ],
+  },
+
+  // ===== 青年 =====
+  {
+    id: 'adult_01', stages: ['青年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 10, title: '竞技大会',
+    narrative: '王都最大的竞技场——"血与沙"——迎来了五年一度的天下第一武道会。来自各国的战士、法师、刺客汇聚于此，四周的看台上挤满了三万名观众。奖金是整整一千金币，外加一个觐见国王的资格。入场口的老宦官面无表情地递给你一块号码牌："能活着走到第三轮的人，都不简单。"',
+    options: [
+      { text: '报名参赛', require: { 力量: 60 }, effects: { 力量: 10, 声望: 40, 财富: 500 }, narrative: '你连赢三场。每一场都伤痕累累，但每一场都站在了最后。当国王起身为你鼓掌时，你意识到——你的名字，从今天起会被人记住。从竞技场出来，你的口袋里装着沉甸甸的金币，胸膛里装着一颗更骄傲的心。' },
+      { text: '下注赌一把', require: {}, effects: { 财富: 300, 运气: -3 }, narrative: '你把全部积蓄押在了一个冷门选手身上。比赛打到一半，那个冷门选手居然一个翻身把卫冕冠军打趴了。全场哗然。你赢了三百金币。但你知道这是运气——而运气不会永远站在你这边。' },
+      { text: '观战学习', require: {}, effects: { 智慧: 5, 敏捷: 3 }, narrative: '你没有下注，也没有参赛。你拿着一根小木棍，在沙地上默默记录着每一位选手的招数。旁边的人觉得你是个怪人——但你知道，你学到的东西比一千个金币更值钱。' },
+    ],
+  },
+  {
+    id: 'adult_02', stages: ['青年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 8, title: '遗迹探险',
+    narrative: '"末代精灵王的地宫，三千年没被人找到过，"探险队长的独眼在火把光中闪烁着狂热的火焰，"我们找到了入口。需要十个人。报名的只有七个——还差三个。"在场的每个人都知道这是玩命的事。精灵王的诅咒在大陆上流传了三千年。',
+    options: [
+      { text: '立即加入', require: { 敏捷: 50, 体质: 50 }, effects: { 力量: 8, 财富: 800, 声望: 30 }, narrative: '地宫里的机关精妙得令人惊叹。你灵巧地翻过滚石陷阱，咬牙扛住了毒箭擦过的伤口。当你们打开最后一扇门时，满地的金币和珠宝在黑暗中静静发光。你的名字被写进了探险史——第七个活着走出精灵王地宫的人。' },
+      { text: '谨慎观望', require: {}, effects: { 运气: 3 }, narrative: '你站在洞穴入口，看着探险队消失在地底。三天后，只回来了两个人——浑身是血，语无伦次，嘴里不停念叨着"精灵王的诅咒是真的……"你打了个冷战，庆幸自己没有冲动。' },
+      { text: '提供物资支持', require: { 财富: 500 }, effects: { 财富: 200, 声望: 20 }, narrative: '"我不下去，但我的钱可以。"你出钱给探险队买最好的装备。三周后，探险队奇迹般地带回了宝物。队长把最大的一袋金币递给你："没有你的装备，我们走不到最后。你是这次远征的半个英雄。"' },
+    ],
+  },
+  {
+    id: 'adult_03', stages: ['青年'], minAttr: {}, vision: 'wealthy', difficulty: '',
+    weight: 15, title: '商机乍现（愿景专属）',
+    narrative: '深夜，酒馆打烊前最后一个客人把一个消息甩在了桌上——远洋航路重开了。第一批香料和丝绸的利润是成本的十倍。但风险同样巨大：船只有一半的概率能活着穿过风暴之海。你盯着烛火，反复计算着盈亏，直到天亮。',
+    options: [
+      { text: '砸锅卖铁投资', require: { 财富: 1000 }, effects: { 财富: 3000, 运气: 8 }, setFlag: 'bigInvestor', narrative: '你把能卖的全卖了，全部押在了一条船上。接下来三个月里你每天去码头等。第四个月的清晨，远方升起了熟悉的白帆——船回来了！甲板上满载着异域的珍宝。你数着钱手都在发抖。三倍的回报，一夜之间你从一个普通商人变成了全城最炙手可热的新贵。' },
+      { text: '小额试探', require: {}, effects: { 财富: 500, 智慧: 3 }, narrative: '你投了一小笔钱，"就当打水漂了。"结果不但没打水漂，还翻了倍。虽然没有暴富，但你学到了关键一课：投资要看风向，更要看自己输不输得起。' },
+      { text: '放弃这次机会', require: {}, effects: { 运气: -3 }, narrative: '你犹豫了太久。等到你终于下定决心赶到港口时，所有的船都已经起锚出航。你站在码头上，看着空荡荡的海面，心想——下次，绝不能再犹豫了。' },
+    ],
+  },
+  {
+    id: 'adult_04', stages: ['青年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 7, title: '神秘委托',
+    narrative: '一个戴面具的人悄然滑进你对面的椅子，将一封密封的信推到桌上。信蜡上盖着一个你从未见过的纹章——一条盘绕着骷髅的毒蛇。"读完之后给我答复，"面具背后传来低沉的声音，"报酬是五千金币。代价是——你必须假装从来没有遇见过我。"',
+    options: [
+      { text: '接下委托', require: { 敏捷: 70 }, effects: { 财富: 2000, 声望: 20, 体质: -5 }, setFlag: 'tookContract', narrative: '任务比想象中更加险恶。你在下水道里与刺客搏斗，在悬崖边与陷阱赛跑。活着回来时，你身上的伤多到数不清。但五千金币如约出现在了你的床头。你看着那些金币，知道每一枚都是用命换的。' },
+      { text: '拒绝', require: {}, effects: { 运气: 3 }, narrative: '"你找错人了。"你把信推了回去。面具人沉默了几秒，收信离开，消失在人群中。一个月后，你听说有一个冒险者接了同样的委托——然后再也没有回来。你深吸了一口气，去交易所给那个冒险者的遗孤匿名捐了一笔钱。' },
+    ],
+  },
+
+  // ===== 壮年 =====
+  {
+    id: 'prime_01', stages: ['壮年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 10, title: '魔物入侵',
+    narrative: '北方边境升起了狼烟——那是七百年未曾点燃的烽火。魔王军的前锋已经突破了寒脊要塞，正以摧枯拉朽之势向南推进。王宫发出了全大陆征兵令。广场上挤满了前来应征的人，母亲们抱着孩子哭泣，铁匠彻夜不停地锻打兵器。空气中弥漫着恐惧与决心交织的古怪气味。',
+    options: [
+      { text: '应征入伍', require: { 力量: 70, 体质: 60 }, effects: { 力量: 15, 声望: 50, 体质: 5 }, setFlag: 'warHero', narrative: '战场上，你高举长剑冲在阵线最前方。泥土混合着血水，战鼓震得大地在发抖。但你没有退。那一战，你砍倒了七个敌人，救下了两个战友，杀出一条血路。将军亲手将一枚金鹰勋章别在你胸前："你是这座城的英雄。"' },
+      { text: '用钱雇佣替身', require: { 财富: 3000 }, effects: { 财富: -2000, 道德: -10 }, narrative: '你在征兵名单上签了一个陌生人的名字，把一袋金币塞进征兵官手里。那个替身走出了你的门，再也没有回来。你安然度过了战争，但每当看到阵亡者的名单，你就移开视线——你不敢面对那些名字。' },
+      { text: '逃往他国', require: {}, effects: { 敏捷: 8, 声望: -20, 道德: -5 }, narrative: '你带着能带走的一切，乘着夜色上了最后一艘难民船。船离岸时，你看见城里的火光映红了半边天。你活了下来。但故乡的人们记住了你的名字——以另一种方式。' },
+    ],
+  },
+  {
+    id: 'prime_02', stages: ['壮年'], minAttr: {}, vision: '', difficulty: 'normal',
+    weight: 8, title: '家族危机',
+    narrative: '一封家书在你的手中被攥得发皱。父亲投资失败，欠下了连你们家祖宅都赔不起的巨债。债主给了三个月的期限，到时候就要收走一切。母亲在信的最后写道："不要回来。我们应付得来。"你的拳头砸在桌上——他们应付不来。',
+    options: [
+      { text: '变卖家产还债', require: { 财富: 2000 }, effects: { 财富: -1500, 声望: 15, 道德: 10 }, narrative: '你变卖了自己的产业和值钱的装备，换回了足够的金币。当债主把借条撕碎的那一刻，父亲的手在发抖，但他挺直了腰杆。"我儿子比我强。"他没有说谢谢，但这句话胜过了千言万语。' },
+      { text: '外出借债', require: { 魅力: 80 }, effects: { 财富: 1000, 声望: -5 }, narrative: '你动用了所有人脉，求遍了所有朋友。三天后，你带着借来的钱回了家。虽然不是全部，但足够延迟刑期。代价是——你欠下的人情债，可能比金钱更难还。' },
+      { text: '赖账跑路', require: {}, effects: { 声望: -30, 道德: -15 }, narrative: '你带着全家趁夜搬走，连祖宅都不要了。在新的城市，没人认识你们。但你的父亲从此再没提起过"家"这个字。有些东西，赖账是赖不掉的。' },
+    ],
+  },
+  {
+    id: 'prime_03', stages: ['壮年'], minAttr: {}, vision: 'sage', difficulty: '',
+    weight: 15, title: '禁忌的知识（愿景专属）',
+    narrative: '在一座被遗忘的地下图书馆里，你找到了一本没有封面的黑皮书。书页上爬满了发光的文字——那是三千年前被神明禁绝的"真理之章"。据传，任何人读完这本书都会获得通晓万物的智慧，但代价是——你永远无法再相信任何你曾经相信的东西。你翻开第一页，手指在颤抖。',
+    options: [
+      { text: '研读禁书', require: { 智慧: 100 }, effects: { 智慧: 20, 道德: -20, 运气: 5 }, setFlag: 'darkKnowledge', narrative: '你读了三天三夜，不吃不喝。合上最后一页时，你的眼睛里闪烁着异样的光芒。你知道了世界的真相——那些丑陋的、美好的、令人战栗的真相。从此你看每一个人，都像在看一个还没拆开的谜题。你的智慧无人能及，但你的笑容，再也不像从前了。' },
+      { text: '仅翻阅许可部分', require: {}, effects: { 智慧: 10, 声望: 10 }, narrative: '你小心翼翼地跳过了那些闪着血红色光芒的篇章，只研习了基础的部分。即便如此，其中蕴含的智慧已让你的魔法造诣突飞猛进。你把剩下的章节封存在图书馆深处，希望永远没人找到。' },
+      { text: '向教会举报', require: {}, effects: { 声望: 30, 道德: 15, 智慧: 5 }, narrative: '"这书不该存在于世上。"你做了一个艰难的决定，向教会上报了它的位置。教会的大主教亲自为你授勋。"你守住了信仰的底线，"他说。你点了点头，但你的眼睛总是不自觉地看向教会藏书室那扇紧闭的大门。' },
+    ],
+  },
+  {
+    id: 'prime_04', stages: ['壮年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 7, title: '旧友重逢',
+    narrative: '雨夜，有人敲你的门。门外站着一个你几乎认不出的人——二十年前跟你一起偷过苹果、挨过揍的发小。岁月在他脸上刻下了深深的皱纹，但他的眼睛还是那双眼睛。"我走了两天两夜，"他声音沙哑地开口，"不知道该找谁。就想到了你。"',
+    options: [
+      { text: '热情款待', require: {}, effects: { 魅力: 5, 道德: 8, 财富: -100 }, narrative: '你把老友拉进屋里，温酒备菜。他喝着酒，慢慢讲起这些年——破产、丧妻、流浪。天亮时，他站起来要走。你把一袋钱塞进他手里。"酒钱。"你说。他没有推辞，两个老男人在门口沉默地拥抱了一下。这是你今年觉得最值得的一笔花费。' },
+      { text: '冷漠以对', require: {}, effects: { 魅力: -3 }, narrative: '你站在门口，没有让他进来。他眼中的光熄灭了。他没说什么，转身走入雨中。自那以后，你再也没见过他。但偶尔的雨夜，你会想起他，想起那个一起偷苹果的夏天。然后你会灌自己一杯酒，装作什么也没想起。' },
+      { text: '借他一大笔钱', require: { 财富: 5000 }, effects: { 财富: -3000, 声望: 30 }, narrative: '"拿去吧，不用还。"你把沉甸甸的钱袋塞进他手里。他张了张嘴，像是想说什么，最终只挤出一句"谢谢"。两年后你听说他用这笔钱开了家铁匠铺，日子渐渐好了起来。他的店门永远向你敞开。' },
+    ],
+  },
+
+  // ===== 中年 =====
+  {
+    id: 'mid_01', stages: ['中年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 10, title: '人生十字路口',
+    narrative: '清晨，你站在窗前看着街上人来人往，忽然意识到——你已经走过了一大半的人生。头发里添了几缕银丝，眼角多了几道纹路。但你的心还和年轻时一样，充满了不甘平凡的躁动。桌上放着一份新的冒险地图、一本空白的著作，和一盆正在盛开的盆栽。哪一个才是接下来的答案？',
+    options: [
+      { text: '继续冒险', require: { 体质: 80 }, effects: { 力量: 8, 敏捷: 8, 运气: 5 }, narrative: '你重新系上那副磨得锃亮的铠甲，感觉像穿上了自己的皮肤。冒险公会的新人们看到你时下巴都快掉了——那个传奇还在出任务？！你只是笑了笑，紧了紧剑带。"老习惯，改不掉。"走在前面的路，跟三十年前一样让人期待。' },
+      { text: '著书立传', require: { 智慧: 90 }, effects: { 声望: 40, 智慧: 5, 财富: 300 }, narrative: '你把冒险生涯的回忆变成了文字。半年之后，《龙与血的三十载——一个冒险者的自述》出版了。三个月内加印了五次。人们在酒馆里传阅你的书，年轻人把你的故事编成了歌。你的名字不再只是一个冒险者——而是一段传奇。' },
+      { text: '退隐田园', require: {}, effects: { 体质: 8, 道德: 10, 运气: 8 }, narrative: '你把铠甲和剑挂在了墙上，在郊外买了一座小庄园。每天种花、养鸡、烤面包。邻居都不知道你是谁，只知道隔壁住着一个爱笑的中年人，喜欢在下午对着夕阳拉手风琴。这也许不是你年轻时梦想的生活——但你发现，幸福从来不是轰轰烈烈的。' },
+    ],
+  },
+  {
+    id: 'mid_02', stages: ['中年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 7, title: '仇敌来袭',
+    narrative: '有人在暗中盯了你很久。二十年前你也许在某个战场上、某场生意中、某个不经意的决定里，得罪过一个不该得罪的人。如今仇家终于来了——不是带着刀剑，而是带着足以毁掉你后半生一切的手段：密信、证据、人证、物证。你被逼到了墙角。',
+    options: [
+      { text: '正面迎战', require: { 力量: 90 }, effects: { 力量: 10, 声望: 20 }, narrative: '你没有退缩，而是选择了正面对抗。你找齐了证人，当众揭穿了仇家的阴谋。那场对峙快意恩仇——你不仅赢回了声誉，还在仇家的地盘上插了一面旗。围观的群众在欢呼，而你喘着粗气，觉得自己仿佛又年轻了十岁。' },
+      { text: '化敌为友', require: { 魅力: 100 }, effects: { 魅力: 8, 道德: 15 }, narrative: '你约了仇家在酒馆里聊了一夜。从最初的对峙到渐渐松动的戒备，从愤怒的控诉到无奈的坦白。公鸡打鸣时，你们握了握手。"这世界上的敌人已经够多了，"你说，"多一个朋友不好吗？"他沉默了很久，最终点了点头。' },
+      { text: '赔钱了事', require: { 财富: 5000 }, effects: { 财富: -3000 }, narrative: '你选择了最不体面但最有效的方式：用钱封口。一袋袋金币搬进仇家家里，他脸上的愤怒慢慢变成了满意的笑容。你用财富买来了安宁——虽然心里多少有些憋屈，但你已经过了那个意气用事的年纪。' },
+      { text: '忍气吞声', require: {}, effects: { 声望: -10, 道德: -5 }, narrative: '你咽下了这口气，低声下气地认了错。仇家得意洋洋地走了，留下你一个人站在空荡荡的屋子里。窗外有人看到了这一幕，消息很快传开。你在一段时间里抬不起头——但你知道，活着比什么都重要。' },
+    ],
+  },
+  {
+    id: 'mid_03', stages: ['中年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 7, title: '子女的前程',
+    narrative: '你的孩子已经长成了一个可以独当一面的年轻人。某天晚饭后，她郑重地坐到你面前，说出了那个你一直害怕听到的决定："我要去远方。"她的眼睛亮得惊人——那是你很久以前照镜子时见过的那种光芒，属于不肯低头、不肯平庸的目光。',
+    options: [
+      { text: '支持他追梦', require: {}, effects: { 道德: 10, 财富: -500 }, narrative: '你从怀里掏出一个沉甸甸的钱袋，放在她手心。"路上小心，写信回来。"她扑上来抱着你哭了一场。送别那天，你站在山头一直看，直到她的身影消失在地平线尽头。你知道她可能会摔跟头——但你也知道，不让她去的代价，比任何摔倒都要沉重。' },
+      { text: '让他走你安排的路', require: { 声望: 200 }, effects: { 声望: 20, 道德: -5 }, narrative: '你动用了所有人脉为他在王都谋了一份安稳的差事。他没有反抗，乖乖去了。但每次回家，他脸上那副淡淡的、得体又疏离的微笑让你心里不是滋味。你给的不是他想要的——但也许在未来的某一天，他会感激你的安排。你想这样安慰自己。' },
+    ],
+  },
+
+  // ===== 中老年 =====
+  {
+    id: 'late_01', stages: ['中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 10, title: '传承之责',
+    narrative: '你的技艺、你的经验、你用了半辈子才参透的道理，是否可以一并带进坟墓？或者——找一个配得上继承它的人？这个问题在一个不眠的夜里闯入你的脑海，此后再也挥之不去。',
+    options: [
+      { text: '收徒授业', require: { 声望: 200 }, effects: { 声望: 60, 魅力: 5 }, narrative: '你在城中贴了招徒的告示，引来了三十多个年轻人。你从中挑出了最刻苦、最用心的那一个。你毫无保留地把毕生所学教给了他。多年以后，这个徒弟的名字比你更响亮——但他永远记得，自己曾在某年冬天，遇到了一位改变了他人生的师父。' },
+      { text: '著书传世', require: { 智慧: 100 }, effects: { 智慧: 5, 声望: 50 }, narrative: '你用三年时间写了一部巨著，把你的一切都写在了纸上。这本书后来成了大陆上每一所学院的必读教材。你的手稿被保存在王都大图书馆最深处的展厅里，放在玻璃柜中，旁边写着你的名字和生卒年份。' },
+      { text: '埋藏秘密', require: {}, effects: { 运气: 5, 道德: -5 }, narrative: '你花了很长时间决定：有些东西，不该留给后人。你把最危险、最禁忌的知识封存在了一个只有你知道的地方，然后毁掉了所有地图。也许有一天会有人找到——但希望那个人足够聪明。' },
+    ],
+  },
+  {
+    id: 'late_02', stages: ['中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 8, title: '王国的召唤',
+    narrative: '一匹快马停在你的门前。骑手是王宫的近卫骑士，气喘吁吁地递上一封带着王家印章的信。国王亲自召见——不是客套的开场，是真的有事相求。王国面临的外交危机，需要一个不年轻、不冲动、眼界足够宽广的人来解决。他选中了你。',
+    options: [
+      { text: '出任顾问', require: { 声望: 300 }, effects: { 声望: 80, 财富: 2000 }, narrative: '你入宫第一天就感受到了朝堂上的暗流。但几十年的阅历让你在众人面前从容不迫。你成功化解了一场险些演变成战争的外交冲突。国王的金笔在你名前写了"御前第一顾问"，而你知道，拼了大半辈子的命，终于可以安安静静地在朝堂上说话了。' },
+      { text: '婉拒', require: {}, effects: { 声望: -10 }, narrative: '你写了一份得体的回信，以年事已高为由婉拒了国王的邀请。有人说你傲慢，有人说你不识抬举。但你没有解释——因为你明白，王位边的椅子从来就不舒服。你宁愿在自家院子里晒太阳。' },
+    ],
+  },
+  {
+    id: 'late_03', stages: ['中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 8, title: '故地重游',
+    narrative: '三十年了，那座曾经的小村庄如今已经面目全非——有的房子塌了，有的被大火烧过，有的改成了酒馆。只有村口那棵老槐树还在，当年你在上面刻下的记号还依稀可见。你闭上眼睛，仿佛还能听到儿时伙伴们的嬉笑声。',
+    options: [
+      { text: '重建家乡', require: { 财富: 10000 }, effects: { 财富: -5000, 声望: 60, 道德: 20 }, narrative: '你决定用自己半生的积蓄为这片土地做些什么。一座桥、一个学堂、一个水车——半年之后，村庄比当年最繁荣时还要好十倍。人们把村口广场命名为你家族的姓氏。而老槐树下多了一张石凳，上面刻着："给一个没有忘记故土的人。"' },
+      { text: '默默怀念', require: {}, effects: { 道德: 5 }, narrative: '你在老槐树下坐了一个下午，看日影缓缓西移。没有大肆修建，没有大张旗鼓，只是静静地怀念。然后你拍拍身上的土，起身离开了。有些东西不需要被归还——能被记忆，已是最好不过。' },
+    ],
+  },
+
+  // ===== 老年 =====
+  {
+    id: 'old_01', stages: ['老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 10, title: '最后的冒险',
+    narrative: '黄昏的山顶上，你坐在一块被夕阳烧得火红的岩石上，俯瞰着脚下的大地。你在想象：如果就这样长眠于此，会不会是最好的告别？不——你还不想告别。你还有最后一座山峰没有征服，最后一个遗憾没有填补。你的骨头在作痛，但你的心依然在敲着冒险的鼓点。',
+    options: [
+      { text: '踏上最后的征途', require: { 体质: 100 }, effects: { 声望: 40, 力量: 5, 体质: -15 }, narrative: '你拄着拐杖，瘸着腿，走进了传说中无人归来的龙牙谷。半个月后，你全身是伤地出来了——但你做到了。你做到了三十岁时都想都不敢想的事。吟游诗人们从此多了一首歌，叫做《白发屠龙者》。每次唱到高潮部分，酒馆里的所有人都会站起来举杯。' },
+      { text: '安享晚年', require: {}, effects: { 体质: 5, 运气: 10, 财富: -100 }, narrative: '你把最后的日子花在了最值得的事情上：每天早晨沏一壶好茶，坐在门口晒晒太阳，看着村里的孩子们跑来跑去。有时候给他们讲一两个从前的故事——不讲那些太吓人的，只讲那些好笑的、温暖的、让人心安的。孩子们都叫你"故事爷爷"，你很喜欢这个名字。' },
+    ],
+  },
+  {
+    id: 'old_02', stages: ['老年'], minAttr: { 体质: 30 }, vision: '', difficulty: '',
+    weight: 6, title: '寿元将尽',
+    narrative: '你知道自己时日不多了。不是恐惧，而是一种奇异的平静。冬天来了，你躺在温暖的被窝里，看着窗外的雪花一片一片飘落。这一生有很多遗憾，很多如果——但也有很多笑声，很多拥抱，很多值得记住的瞬间。你开始整理最后的行装。',
+    options: [
+      { text: '准备后事', require: {}, effects: { 声望: 20, 道德: 10 }, narrative: '你平静地写好了遗嘱，见过了所有想见的人。在最后的时光里，每一顿饭都多嚼了几口，每一个拥抱都多持续了几秒。离去那天，你没有遗憾——你把所有的爱都留在了该留下的人身上。' },
+      { text: '疯狂享乐', require: { 财富: 5000 }, effects: { 财富: -5000, 运气: 5 }, narrative: '"如果只剩下三个月，为什么不过得像三十岁？"你掏出积蓄，办了场连国王都羡慕的宴会。美酒、美食、美人——你活在当下，燃烧尽最后一分财富。有人说你糊涂，但你的笑声比任何反驳都有力量。你在狂欢中离去，如同蜡烛燃尽前的那一秒最明亮的火焰。' },
+      { text: '寻找续命之法', require: { 智慧: 130 }, effects: { 体质: 10, 道德: -15 }, setFlag: 'immortality', narrative: '你一头扎进了禁忌的领域——不死之术、灵魂附体、时间的缝隙。你成功了——或者说，你以一种常人无法理解的方式成功了。你的脉搏还在跳动，但你的体温变得冰凉，你的影子有时候不会出现在该出现的地方。延寿的代价，你在余生中慢慢体会。' },
+    ],
+  },
+  {
+    id: 'old_03', stages: ['老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 7, title: '临终遗嘱',
+    narrative: '律师、公证人、你的家人和朋友——都聚集在你的床前。你扶了扶老花镜，扫了一眼手中的财产清单。这些数字，这些名字，这些你用一生换来的东西，都将在你走后有个去处。没有人能用六十年做这么多次选择，而这一次——是最后一次。',
+    options: [
+      { text: '平分遗产', require: {}, effects: { 声望: 30, 道德: 15 }, narrative: '你公平地将一切留给了每一个爱过你的人。没有偏袒，没有算计。你的公正被后人传颂——从此以后，你的家族立了一个规矩：遗产永远要平分。这成了你给后代留下的最后一份礼物：一个永远不会因为金钱而反目成仇的家。' },
+      { text: '捐给王国', require: { 财富: 50000 }, effects: { 财富: -50000, 声望: 80 }, narrative: '你只给家人留了足够生活的部分，其余一切都捐给了王国的公库。"这些钱帮不了我一个人，"你在遗嘱中写道，"但也许能帮一百万个我从未见过的人。"你的名字被刻在了广场的石碑上，与开国元勋并肩。而你的儿子们对此表示非常不快——但你不在乎了。' },
+    ],
+  },
+
+  // ===== 通用事件（多阶段可用） =====
+  {
+    id: 'common_01', stages: ['青年', '壮年', '中年', '中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, title: '奇遇·神秘商人',
+    narrative: '他总是在你最不经意的时刻出现——披着一件似乎能吸收光线的黑色斗篷，只露出半张布满古老纹身的脸。他的地摊上陈列着你从未见过的奇物：发光的种子、会流泪的水晶、自称能打开任何一扇门的钥匙。"我不收金币，"他开口了，声音像两块石头在摩擦，"我只收……故事。"',
+    options: [
+      { text: '购买稀有道具', require: { 财富: 2000 }, effects: { 财富: -2000, 力量: 10, 运气: 5 }, narrative: '你用一个自己最珍贵的冒险故事，加上满满一袋金币，换了一柄会散发月光的剑。这把剑后来跟了你很多年，在无数次危急时刻发出了预警的光芒。那个商人再也没有出现过——但他的货，是正品。' },
+      { text: '砍价', require: { 魅力: 70 }, effects: { 财富: -800, 运气: 3 }, narrative: '你磨破了嘴皮子，最后用一个笑话、一首歌谣和小半袋金币换到了你想要的东西。神秘商人临走时回头看了你一眼："很少有人能跟我讨价还价——你挺有意思的。"他消失在人群中时，你发现你的手腕上多了一道淡淡的金色印记。' },
+      { text: '离开', require: {}, effects: {}, narrative: '你摇了摇头，转身没入人流。再回头时，地摊已经不见了——像从未存在过一样。后来你在冒险者酒馆里听说过这个神秘商人的传闻：有人说他是被放逐的神明，有人说他是活了千年的幽灵。无论真假，你总觉得那一天你错过了一些不可替代的东西。' },
+    ],
+  },
+  {
+    id: 'common_02', stages: ['少年', '青年', '壮年'], minAttr: {}, vision: '', difficulty: 'easy,heaven',
+    weight: 12, title: '天上掉馅饼',
+    narrative: '这绝对是你的幸运日。走在路上，脚下踢到了一个沉甸甸的东西——一个满到溢出来的金币袋，就大大咧咧地躺在路中间。四周恰好没有人。阳光落在金币上，那么耀眼，那么诱人。这么一大笔钱，够你花好几个月的了。',
+    options: [
+      { text: '据为己有', require: {}, effects: { 财富: 1500, 道德: -5 }, narrative: '你飞快地环顾四周，确认没人看见，把袋子揣进了怀里。心跳快得不像话。在最近的酒馆里你点了一桌最好的菜，吃到一半时却莫名有些吃不下。不过很快你就释然了——毕竟这世界欠你的，你只是拿回了属于自己的一份。' },
+      { text: '寻找失主', require: {}, effects: { 声望: 20, 道德: 15 }, narrative: '你提着钱袋在附近的商铺一家一家询问。一个多时辰后，一个满头大汗的商人跌跌撞撞地冲过来——那几乎是他全部的身家。他握着你的手感激得说不出话，最后给了你一百金币作酬谢。你收得心安理得——做好事本来就应该有回报。' },
+    ],
+  },
+  {
+    id: 'common_03', stages: ['青年', '壮年', '中年', '中老年'], minAttr: {}, vision: '', difficulty: 'hard',
+    weight: 12, title: '暗杀',
+    narrative: '夜晚的后巷，昏暗的光线勉强照出六个黑影——他们从屋顶、拐角同时现身，把你包围在中间。领头的人转动着匕首，刀刃反射着冷冽的月光。"别恨我们，我们只是拿钱办事。"你感到后背渗出了一层冷汗。今夜要活着走出这条巷子——不容易。',
+    options: [
+      { text: '反击', require: { 力量: 80, 敏捷: 60 }, effects: { 力量: 8, 声望: 15 }, narrative: '你抢先动了。一拳放倒最前面的那个，旋身躲过刺来的匕首，抄起墙角的铁管反击。三十次呼吸后，地上躺着六个呻吟的人。你擦了擦嘴角的血，走出巷子。第二天，整个地下世界都知道——这个人不好惹。' },
+      { text: '逃跑', require: { 敏捷: 70 }, effects: { 敏捷: 8 }, narrative: '你拔腿就跑。跳过木箱，跃过高墙，在迷宫般的小巷中七拐八拐。刺客们追了三条街就彻底迷失了方向。你躲在一个空酒桶里，听着外面的脚步声渐渐远去，呼吸才慢慢平复下来。活着——比什么都强。' },
+      { text: '破财消灾', require: { 财富: 3000 }, effects: { 财富: -2500 }, narrative: '"等等。"你举起双手，慢慢把怀里的钱袋扔到他们脚下。领头的人捡起掂了掂，吹了声口哨。"算你识相。"他们消失在黑暗中，留下了心有余悸的你。钱没了，但你还有一条命——而命这东西，多少钱都买不回来。' },
+      { text: '跪地求饶', require: {}, effects: { 声望: -30, 道德: -10, 财富: -500 }, narrative: '你双膝一软跪了下去，把值钱的东西全掏了出来。刺客头子啐了一口："就这点出息？"他们收走了你的财物，临走时还在你背上踢了一脚。你在地上躺了很久，直到月亮升到了头顶。活下去从来都不体面——但你活下来了。' },
+    ],
+  },
+  {
+    id: 'common_04', stages: ['青年', '壮年', '中年', '中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, title: '暴风雨之夜',
+    narrative: '百年难遇的飓风裹挟着倾盆暴雨席卷全城。河水暴涨，房屋在洪水面前像积木一样被冲垮。尖叫声和风声混在一起，世界仿佛回到了创世之初的混沌。你站在二楼的窗口，借着闪电的亮光看见了——对岸被困在屋顶的一家人正在挥手求救。',
+    options: [
+      { text: '救助灾民', require: { 体质: 60 }, effects: { 声望: 25, 道德: 15 }, setFlag: 'savedLives', narrative: '你跳入洪水，游过了湍急的河道——每一步都像在与死神掰手腕。但你游到了对岸。你和那一家人在屋顶上抱在一起熬过了最危险的时刻。天光破晓时，水退了。那家人跪在你面前磕头——他们的孩子长大后开了一家免费的救济所，名字叫你的名字。' },
+      { text: '加固自己的房屋', require: {}, effects: { 体质: 5 }, narrative: '你拼命加固门窗、往地下室转移贵重物品。当洪水退去时，你的房子是街上少数几座还立着的。你保护了自己的家——这也许是此刻最重要的事。虽然你知道，对岸的那些呼救声会缠绕你许多年。' },
+      { text: '趁机发灾难财', require: {}, effects: { 财富: 1000, 道德: -20, 声望: -15 }, narrative: '灾难过后，各种物资极度紧缺——而你囤积了大量粮食和建材。你以高出正常五倍的价格卖出，赚得盆满钵满。没有人当面指责你——毕竟自由市场——但你在街上走过的每个角落，身后都跟着沉默的注视。' },
+    ],
+  },
+  {
+    id: 'death_01', stages: ['青年', '壮年', '中年', '中老年', '老年'], minAttr: {}, vision: '', difficulty: 'hard',
+    weight: 8, title: '致命陷阱',
+    narrative: '脚下的石板微微一沉——不好，是踩板陷阱！你还来不及反应，机关已被触发，四壁弹出了密密麻麻的钢刃，从各个方向向你袭来。时间仿佛在这一刻凝结——你想到了所有爱过的人，想到了所有未了的心愿。但没有时间了。钢刃已经飞到了眼前。',
+    options: [
+      { text: '极限闪避', require: { 敏捷: 120 }, effects: { 敏捷: 10, 运气: 3 }, narrative: '你的身体比大脑更快地做出了反应——侧身、后仰、空翻、滚动。十二枚钢刃擦着你的衣角飞过，最近的一枚削掉了你的一缕头发。你躺在地上大口喘气，背上全是冷汗。但你还活着——这就是最重要的。' },
+      { text: '硬扛', require: { 体质: 100 }, effects: { 体质: -30, 力量: 5 }, narrative: '来不及躲了——你双臂护住要害，咬牙硬接。钢刃刺进你的皮肉，但你的骨骼硬如钢铁。血淌了一地，你浑身都在颤抖，但你撑住了，没有倒下。靠着止血药和运气，你活了下来。此后你每看到石板路，都会下意识检查脚下——这不是创伤，这是智慧。' },
+      { text: '绝望', require: {}, effects: {}, narrative: '', death: true, deathNarrative: '你没能躲开。十二枚钢刃从各个方向贯穿了你的身体。你的最后一刻并不痛苦——疼痛来得很快，去得更快。你的意识慢慢沉入无尽的黑暗，耳边最后回荡的，是许多年前母亲为你哼唱的那首摇篮曲。你的一生不算完美，但足够完整。再见了，冒险者。' },
+    ],
+  },
+  {
+    id: 'late_04', stages: ['中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 7, title: '老友的葬礼',
+    narrative: '你穿上了多年没碰的黑色礼服，站在墓园里。棺材缓缓降入泥土——里面躺着的是跟你一起闯过无数难关的老伙计。牧师在读祷文，你一个字都没听进去。你在想：下一个会是谁？也许不久之后，就该轮到你去陪他了。',
+    options: [
+      { text: '发表悼词', require: { 魅力: 80 }, effects: { 声望: 20, 魅力: 5 }, narrative: '你走上讲台，沉默了很久。然后你讲了一个只有你们两个人知道的故事——关于一个愚蠢的赌约，关于一瓶被偷换的烈酒，关于两个愣头青在暴风雨里走了四十里路只为证明自己不怕死。听众先笑了，然后哭了。你下来时，发现自己的眼眶也湿了。' },
+      { text: '默默送别', require: {}, effects: { 道德: 8, 运气: 3 }, narrative: '你没有说话。你只是把一朵白花放在棺材上，站了很久。人群散去了，你还站在那儿。风吹过墓园，树叶沙沙作响——像是老友在跟你说最后一句话，可惜你听不清。' },
+    ],
+  },
+  {
+    id: 'old_04', stages: ['老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 7, title: '不速之客',
+    narrative: '一个飘着细雪的冬日，一个陌生的年轻人敲开了你的门。他手里攥着一封泛黄的信，信封上是你四十年前的笔迹。"我父亲生前一直念叨你，"年轻人声音拘谨，"他说你是他这辈子遇到的最好的朋友。我是专程来见见你的。"',
+    options: [
+      { text: '热情招待', require: {}, effects: { 魅力: 5, 声望: 10, 道德: 8 }, narrative: '你把那年轻人迎进屋，沏上了最好的茶。你翻出了他父亲年轻时的画像，指着上面的人说："他是我遇见过的最勇敢的人。"那天下午你讲了整整三个月的故事。年轻人走时，把那封信留给了你——信的背面多了一行他父亲临终前写下的字：谢谢你改变了我的一生。' },
+      { text: '淡然处之', require: {}, effects: { 智慧: 5 }, narrative: '你端了杯茶给他，简短地聊了几句。不是不想多说——只是你已经学会了和过去和解。有些感情太重，不适合在一个下雪天的下午重新翻出来。你送他到门口，他回身鞠了一躬，走进了雪里。' },
+    ],
+  },
+  {
+    id: 'common_06', stages: ['青年', '壮年', '中年', '中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, title: '酒馆里的陌生人',
+    narrative: '昏暗的酒馆角落里坐着一个你从未见过的人。他的装束不属于这片大陆，说话带着奇异的卷舌音。他面前的酒杯空了又满、满了又空。终于他转头看向你，眼神中混合着绝望与希望："你看起来像个见过世面的人——能帮我个忙吗？"',
+    options: [
+      { text: '听他讲述', require: {}, effects: { 智慧: 5, 运气: 5 }, narrative: '他讲了一个关于失落王国的故事——关于一枚能改写历史的戒指。你无法判断那是疯狂还是真实的，但这个故事本身就像一颗种子，在你心里扎了根。许多年后，你将这个故事写成了书，成为大陆上最畅销的小说。至于它是不是真的——从来没有人在意。' },
+      { text: '请他喝酒', require: { 财富: 50 }, effects: { 魅力: 5, 运气: 3 }, narrative: '你对他的故事不感兴趣，但你看得出这个人很需要一杯酒。你替他付了酒钱，拍了拍他的肩膀。他苦笑着举杯向你致意："善良的陌生人，愿命运善待你。"你走出酒馆时，发现口袋里多了一枚你从未见过的硬币。' },
+    ],
+  },
+  {
+    id: 'common_07', stages: ['少年', '青年', '壮年', '中年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, title: '魔法学院的邀请函',
+    narrative: '一封烫金的信函落在你的桌上，封印是一团燃烧的蓝色火焰——王国最高魔法学院的标志。"经过长期观察，我们认为你具备罕见的天赋，"信上写道，"如果你愿意，请在下个月圆之夜之前抵达灰塔。我们等你。"',
+    options: [
+      { text: '前往灰塔', require: { 智慧: 60 }, effects: { 智慧: 15, 声望: 20, 财富: -200 }, narrative: '灰塔比传说中更宏伟——也更高冷。但你在里面如鱼得水。你的同学们来自全大陆各个角落，精灵、人类、甚至一个沉默寡言的龙裔。你学到了如何把一根羽毛变成信鸽、如何从空气中提取水分子、如何在黑暗里看见时间的流动。学费不便宜，但你得到的远超过失去的。' },
+      { text: '婉言谢绝', require: {}, effects: { 力量: 5, 敏捷: 3 }, narrative: '你把信封放在一边，继续自己眼前的修行。学院固然好，但你更喜欢野路子的自由——没有校规，没有期末考试，没有必须背下来的冗长咒语。你也许不是最博学的法师，但你一定是街头上最能随机应变的那个。' },
+    ],
+  },
+  {
+    id: 'common_08', stages: ['壮年', '中年', '中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, title: '一封迟到的信',
+    narrative: '你在整理旧物时发现了一封从未拆开的信，压在箱底至少二十个年头。信封上的字迹是你无比熟悉的——那是一个你曾经深爱却没有在一起的人写来的。信纸已经发黄变脆，轻轻一碰就会碎。你捧着它，像捧着一枚时间胶囊。',
+    options: [
+      { text: '拆开读', require: {}, effects: { 道德: 5, 魅力: 3 }, narrative: '"如果你读到这封信——我明天就要离开这片大陆了。我只想告诉你一件事：我不后悔。不后悔遇见你，不后悔爱过你，不后悔在最后的夜晚跟你吵了架。我唯一的遗憾是没能告诉你我不后悔。保重。" 你把信叠好，小心地放回了信封。窗外下起了小雨。' },
+      { text: '原样烧掉', require: {}, effects: { 智慧: 5, 运气: 3 }, narrative: '你把信举到烛火前，犹豫了片刻——然后松了手。火焰吞没了泛黄的信纸，也吞没了永远不可能被读到的内容。你看着最后一撮灰烬飘向窗外，心想：有些东西，不知道答案才是最仁慈的结局。' },
+    ],
+  },
+  // ===== 事件链：冒险者公会 =====
+  {
+    id: 'chain_guild_01', stages: ['青年'], minAttr: {}, vision: '', difficulty: '',
+    requireFlag: 'guild', weight: 15, title: '公会晋升',
+    narrative: '冒险者公会的大厅里，铜板上的任务等级已经不能满足你了。会长把你叫进他的办公室，墙上挂满了历届S级冒险者的画像。"你在公会已经待了这么久，"他递给你一枚银色的晋升徽章，"是时候接更高级的任务了。当然——也更危险。"',
+    options: [
+      { text: '接受晋升', require: {}, effects: { 力量: 8, 声望: 25, 财富: 300 }, setFlag: 'guildElite', narrative: '你接过银徽章的那一刻，整个大厅响起了掌声。那些和你一起出过任务的伙伴们、那些你救过的委托人、那些曾经看不起你的老手——都在为你鼓掌。从今天起，你是精英冒险者。' },
+      { text: '婉拒，继续低调', require: {}, effects: { 敏捷: 5, 运气: 5 }, narrative: '"我还不想太显眼。"你把徽章推了回去。会长挑了挑眉毛，没说什么。但你知道——低调有低调的好处。那些站得太高的人，往往摔得也最惨。' },
+    ],
+  },
+  {
+    id: 'chain_guild_02', stages: ['壮年', '中年'], minAttr: {}, vision: '', difficulty: '',
+    requireFlag: 'guildElite', weight: 15, title: '传奇任务',
+    narrative: '公会地下档案馆的最深处，锁着一份从未有人完成过的SSS级任务卷轴。据说上一位尝试者——三十年前的事——再也没有回来。会长把它放在你面前的桌上，叹了口气："我不想派你去。但整个公会，只有你可能活着回来。"',
+    options: [
+      { text: '接下SSS任务', require: { 力量: 110, 体质: 90 }, effects: { 力量: 12, 声望: 60, 财富: 2000 }, setFlag: 'legendaryHero', narrative: '你走进了传说中无人归来的深渊，一个月后走了出来。你不仅活着，还带回了失落的三件神器。你的名字被永远刻在了公会大厅的铜门上——这是冒险者能获得的最高荣誉。从此以后，每一个新入会的冒险者都会被告知：曾经有一个人，做到了不可能的事。' },
+      { text: '封印卷轴，让后人去试', require: {}, effects: { 道德: 10, 智慧: 5 }, narrative: '你看了卷轴很久，最终摇了摇头。"有些任务，不是人该接的。"你把卷轴放回了保险柜。也许未来的某一天，一个比你更年轻、更无畏的人会打开它——但那个人不是你。你走出档案馆时，觉得肩上轻了许多。' },
+    ],
+  },
+  // ===== 事件链：魔法学院 =====
+  {
+    id: 'chain_mage_01', stages: ['青年'], minAttr: {}, vision: '', difficulty: '',
+    requireFlag: 'mage', weight: 15, title: '魔法试炼',
+    narrative: '魔法塔的年度试炼到了。你站在圆形竞技场中央，周围的高台上坐着十二位大法师。试炼的内容只有一个：用你所学的一切，在一个时辰内让最挑剔的考官感到"意外"。不是强大就够——你必须独特。',
+    options: [
+      { text: '展示独创法术', require: { 智慧: 80 }, effects: { 智慧: 12, 声望: 20 }, setFlag: 'mageElite', narrative: '你创造了一个连导师们都没见过的法术——将两个看似互斥的元素融合在一起。法术施展的那一刻，整个竞技场被七彩的光芒吞没。十二位考官全部起立。你被正式授予了法师之名。' },
+      { text: '稳扎稳打，展示基础', require: {}, effects: { 智慧: 5, 声望: 5 }, narrative: '你选择了最扎实的基础法术——但做到了完美。没有花哨的技巧，没有炫目的光芒，只有无可挑剔的控制力。"这孩子基本功比很多正式法师都好，"一位考官低声说。你不需要惊人的创举，扎实的功底本身就是力量。' },
+    ],
+  },
+  {
+    id: 'chain_mage_02', stages: ['壮年', '中年'], minAttr: {}, vision: '', difficulty: '',
+    requireFlag: 'mageElite', weight: 15, title: '大法师的邀请',
+    narrative: '你的名声传到了魔法塔最高层——大法师议会。一封烫金的邀请函被猫头鹰送到了你的窗台。议会想让你加入他们的研究：一个关于"时间裂隙"的奥秘。这是魔法界三百年来最重大的课题，也是三百年来最危险的研究。',
+    options: [
+      { text: '加入议会', require: { 智慧: 130 }, effects: { 智慧: 18, 声望: 50, 运气: -5 }, setFlag: 'archmage', narrative: '你穿上了深紫色的法师长袍，坐在了那张只有十二个人坐过的石椅上。研究持续了三年——你亲眼见过过去和未来在裂隙中一闪而过。你不再是普通的法师。你是触摸过时间的人。代价是——时间也触摸了你。你的头发一夜之间白了。' },
+      { text: '独自研究', require: {}, effects: { 智慧: 8, 运气: 5 }, narrative: '你谢绝了议会的邀请，选择了独自一人的研究。也许进度慢了不少，但你不需要受制于任何规则。也许有一天，你会用自己的方式敲开时间的门——不急。魔法师的寿命比常人长得多。' },
+    ],
+  },
+  // ===== 事件链：初恋的分支 =====
+  {
+    id: 'chain_love_01', stages: ['青年', '壮年'], minAttr: {}, vision: '', difficulty: '',
+    requireFlag: 'firstLove', weight: 12, title: '久别重逢',
+    narrative: '多年后，你在一个完全意想不到的地方又遇见了那个人。她的身边多了一个小小的身影——一个孩子，正牵着她的裙角好奇地打量着你。她也看到了你，手里的东西差点掉在地上。空气里弥漫着尴尬和那些年没说出口的话。',
+    options: [
+      { text: '坦然上前打招呼', require: {}, effects: { 魅力: 5, 道德: 8 }, narrative: '你们在路边的茶馆坐了一个下午，聊了各自这些年走过的路。说到激动处她会笑，说到难过处她会沉默。分别时，她忽然说："那时候的选择——我不后悔。"你点了点头。有些人不需要在一起，只需要在某个午后，确认彼此都过得很好。' },
+      { text: '远远看着，不去打扰', require: {}, effects: { 智慧: 5, 道德: 3 }, narrative: '你躲在街角的柱子后面，看着她和孩子走进了一家糖果店。你没有走过去。有些重逢，不说话反而更体面。你转身离开时，嘴角带着一丝连自己都没意识到的微笑。' },
+    ],
+  },
+  // ===== 事件链：禁忌知识的后果 =====
+  {
+    id: 'chain_dark_01', stages: ['中年', '中老年'], minAttr: {}, vision: '', difficulty: '',
+    requireFlag: 'darkKnowledge', weight: 15, title: '知识的代价',
+    narrative: '自从读了那本禁书之后，你开始注意到一些别人看不到的东西——墙上的阴影有时会移动，镜子里的倒影偶尔会比你慢半拍。你试图假装一切正常，但内心深处你知道：你在被那些知识改变。而且这种改变，可能无法逆转。一个深夜，你从噩梦中惊醒——发现自己悬浮在天花板上。',
+    options: [
+      { text: '寻求教会的帮助', require: {}, effects: { 道德: 15, 智慧: -5 }, narrative: '你跪在教堂的圣坛前，把所有不该知道的东西都告诉了老主教。他沉默了很久。"孩子，有些东西不该被凡人触碰。但我可以帮你。"净化仪式持续了整整七天。你失去了一部分黑暗知识——但你重新获得了安眠的能力。' },
+      { text: '继续深入探究', require: { 智慧: 120 }, effects: { 智慧: 15, 道德: -15, 运气: -3 }, setFlag: 'darkMaster', narrative: '你没有回头。你顺着那些知识继续往黑暗深处走，越走越深。你学会了一些凡人根本无法想象的技艺——但也失去了更多属于凡人的东西。你的手指偶尔会变得透明，你不再需要吃饭和睡觉。你变成了什么别的东西。但你还记得自己曾经是人类——至少现在还记得。' },
+    ],
+  },
+  // ===== 事件链：战功后续 =====
+  {
+    id: 'chain_war_01', stages: ['壮年', '中年'], minAttr: {}, vision: '', difficulty: '',
+    requireFlag: 'warHero', weight: 15, title: '战后的勋章',
+    narrative: '战争结束了。王宫的广场上铺着红地毯，两旁站满了穿着整齐的仪仗队。无数人捧着鲜花，高喊着你的名字。今天，国王要亲自为你授勋。你的军装洗得发亮，胸前的伤疤被遮住了，但每一步都让你觉得比打仗时还要紧张。',
+    options: [
+      { text: '接受授勋，留在军中', require: { 声望: 200 }, effects: { 声望: 60, 力量: 5, 财富: 500 }, setFlag: 'general', narrative: '国王将一枚金鹰勋章别在你胸前，全场欢呼。从今天起，你不只是一个士兵了——你是王国的将军。你在军中的训练场上巡视时，看到了无数张年轻的面孔，像极了当年的你。你暗暗发誓，要让他们比你自己当年更早上战场，也更快从战场上回来。' },
+      { text: '解甲归田', require: {}, effects: { 道德: 15, 体质: 5 }, narrative: '你把勋章和军装整齐地叠好，放在了军需处的桌上。战争结束了，你需要的不再是武器，而是安宁。你回到了家乡，开了一家小酒馆。墙上挂着一把没开刃的剑，偶尔有新来的客人问起，你只是笑笑，给他们倒上一杯免费的啤酒。' },
+    ],
+  },
+  // ===== 事件链：不死之路 =====
+  {
+    id: 'chain_immortal_01', stages: ['老年'], minAttr: {}, vision: '', difficulty: '',
+    requireFlag: 'immortality', weight: 20, title: '不死的孤独',
+    narrative: '你成功了——你真的没有死。但活着，跟活着，是不一样的。你看着所有你爱的人一个一个离去。你的孙子已经满头的白发，你的曾孙已经认不出你是谁。你独自坐在空荡荡的院子里，看着月亮。六十年前你也是这样看着月亮的——只不过那时候身边还有人在。',
+    options: [
+      { text: '选择成为一个隐士', require: {}, effects: { 智慧: 10, 道德: 5 }, narrative: '你悄悄地离开了所有人的生活。在远方的深山中，你搭了一座小木屋，与树木和飞鸟为伴。偶尔有迷路的旅人经过，会看到一个不知道多大年纪的白发老人，在月光下煮茶。他们会记住他一辈子——因为他讲的故事，比任何一个图书馆收藏的都要长。' },
+      { text: '成为一个传说', require: { 声望: 500 }, effects: { 声望: 50, 魅力: 5 }, narrative: '你不再躲避世人。你在王城的广场上开了一所学校，免费教授来自世界各地的学生。你的年龄成了一个谜——有人说你其实已经活了三百年，有人说你在年轻时喝过龙的血。你从不解释。你只是每天早晨站在讲台上，对着满满一教室的年轻面孔说："今天我要讲的，是你们任何一本书上都找不到的故事。"' },
+    ],
+  },
+  // ===== 更多独立事件（减少重复率） =====
+  {
+    id: 'extra_01', stages: ['青年', '壮年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, title: '赌约',
+    narrative: '酒馆的角落里，一个喝红了脸的商人正在拍桌子："我出一百金币，赌这片大陆上没有一个人敢独自进鬼哭森林！"满场的人都在笑，但没人应声。鬼哭森林——那个名字连小孩听了都会停止哭泣。你手里的酒杯停下了。',
+    options: [
+      { text: '接下赌约', require: { 力量: 60 }, effects: { 力量: 8, 财富: 200, 声望: 15 }, narrative: '你把酒杯往桌上一顿："我去。"所有人转头看你，像在看一个疯子。三天后你走出了鬼哭森林，手里拎着一只鬼面兽的头。酒馆里的欢呼声几乎掀了屋顶。那个商人输得心服口服，把一百金币拍在了你面前。' },
+      { text: '一笑置之', require: {}, effects: { 智慧: 3 }, narrative: '你继续喝酒。鬼哭森林那种地方，一百金币的赌注太低了——至少得值一条命的价钱。' },
+    ],
+  },
+  {
+    id: 'extra_02', stages: ['少年', '青年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, narrativeOnly: true, title: '流浪艺人',
+    narrative: '一个马戏团路过小镇。杂技演员在空中翻飞，驯兽师让狮子跳过火圈。但最吸引你的，是一个站在角落里的老艺人——他既不会杂耍，也不会驯兽。他只是坐在那里讲故事。可他的故事像是有魔力，让你忘了时间的流逝。散场后，他朝你招了招手。',
+    options: [
+      { text: '跟他学讲故事', require: {}, effects: { 魅力: 8, 智慧: 3 }, narrative: '老艺人教了你一个下午。"故事不是讲出来的，是活出来的。"他把一枚小小的银铃铛挂在你手腕上，"当你活着——铃铛会响。"此后你在各地酒馆讲故事，每次讲到最精彩处，铃铛就轻轻响一声，像是在替你鼓掌。' },
+      { text: '继续赶路', require: {}, effects: { 运气: 3 }, narrative: '你对故事没什么兴趣。但你走的时候，不知为什么多看了那个老艺人一眼。许多年后你想起来，觉得他可能是某位流浪的神明——专门给那些愿意停下脚步的人一个祝福。' },
+    ],
+  },
+  {
+    id: 'extra_03', stages: ['壮年', '中年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, title: '决斗',
+    narrative: '有人朝你丢了一只白手套——那是贵族间约定俗成的决斗挑战。挑战者是一个年轻的贵族，脸颊红得像喝了三瓶酒，手指指着你大骂。"你侮辱了我们的家族！"你根本不认识他——但你已经厌倦了被当作活靶子。周围的人群自动让开了一个圈。',
+    options: [
+      { text: '接受决斗，点到为止', require: { 力量: 80 }, effects: { 力量: 5, 声望: 20, 道德: 5 }, narrative: '你的剑快得让所有人倒吸一口凉气。但你只削掉了他帽子上的一根羽毛。"你的家族没有丢脸，"你收剑入鞘，"但我建议你把酒戒了。"围观的人先是一愣，然后爆发出大笑。那个年轻贵族涨红了脸，但他后来成了你最坚定的盟友。' },
+      { text: '拒绝，化解冲突', require: { 魅力: 80 }, effects: { 魅力: 8, 道德: 8 }, narrative: '"我没有侮辱你的家族——但如果我做了什么让你误会的，我道歉。"你伸出手。年轻贵族愣住了，他大概从来没听到过"道歉"这两个字从他想要决斗的对象嘴里说出来。他犹豫了很久——然后握住了你的手。' },
+    ],
+  },
+  {
+    id: 'extra_04', stages: ['少年', '青年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, narrativeOnly: true, title: '路边占卜',
+    narrative: '集市边上支着一顶紫色的小帐篷，门口挂着一块歪歪扭扭的木牌："知晓过去、现在、未来——不灵不要钱。"里面坐着一个蒙着面纱的女人，面前的水晶球发出幽蓝色的光芒。她对你招了招手："进来，孩子。命运已经在你的掌心里发了芽。"',
+    options: [
+      { text: '进去占卜', require: { 运气: 30 }, effects: { 运气: 5, 智慧: 3 }, narrative: '她握着你的手看了很久。"你的生命线很长——但中间有几道岔口，是你自己切开的。每一次选择，都在这里留下了一道痕迹。"她没有收你的钱。"我只收命运的故事，"她说，"你的故事，我已经看到了。"' },
+      { text: '不信这个', require: {}, effects: { 智慧: 3 }, narrative: '你笑了笑，继续往前走。但你没能控制住在帐篷外多站了那么一会儿。占卜师隔着帘子轻轻说了一句："没事——你还会回来的。只是——下一次，可能已经晚了。"你没有回头，但你永远记住了这句话。' },
+    ],
+  },
+  {
+    id: 'extra_05', stages: ['中年', '中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, title: '继承人的选择',
+    narrative: '你的家业已经足够大了——大到需要有人来继承。但你有两个截然不同的孩子：老大稳重务实，处事谨慎；老二天赋异禀，但冲动鲁莽。你必须在两个中选择一个来继承你花了半生建立的一切。妻子说选老大，朋友说选老二。整个家族都在看着你。',
+    options: [
+      { text: '选老大', require: {}, effects: { 声望: 15, 道德: 10 }, narrative: '你把家业交给了大儿子。他也许不是最耀眼的，但他不会让这个家垮掉。事实证明你是对的——在他的经营下，家业蒸蒸日上。老二很生气，但多年后也闯出了自己的一片天。或许你最终帮了两个孩子。' },
+      { text: '选老二', require: {}, effects: { 运气: 8, 道德: -5 }, narrative: '你凭直觉选了老二。他确实有天分——但上任第一年就差点把家底赔掉了一半。不过他在失败中成长得很快。五年后，他不仅弥补了损失，还把家族生意扩大了五倍。你知道他不是长子的那种稳——但你觉得，这才是你最像你的孩子。' },
+    ],
+  },
+  {
+    id: 'extra_06', stages: ['青年', '壮年', '中年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, narrativeOnly: true, title: '边境的灯火',
+    narrative: '你独自走在边境的荒野上。天黑了，看不见路。远方的地平线上忽然亮起了一点灯火——太远了，看不清是什么。也许是村庄，也许是游牧人的篝火，也许是土匪的陷阱。风吹过来，夹着说不清是烤肉还是草药的气味。',
+    options: [
+      { text: '朝灯火走去', require: {}, effects: { 运气: 5, 魅力: 3 }, narrative: '灯火处是一支过路的商队。他们热情地邀你一起吃饭，给你讲了远方的见闻。你吃着烤羊肉，在星空下听他们唱异域的民谣。第二天早上分手时，商队长给了你一张地图——上面标注着一条没人知道的近路。' },
+      { text: '避开灯火绕路', require: {}, effects: { 敏捷: 5, 智慧: 2 }, narrative: '你没有靠近。在这片荒野上，灯光有时候意味着陷阱。你绕了三个时辰的远路，但避开了未知的风险。天快亮时，你在路边看到了三具被魔物撕碎的尸体——正是灯火的方向。你沉默了很久，然后继续赶路。' },
+    ],
+  },
+  {
+    id: 'extra_07', stages: ['幼年', '童年', '少年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, narrativeOnly: true, title: '陌生人的礼物',
+    narrative: '一个你从未见过的旅人蹲下身来，从背包里掏出一个东西递给你。"拿着吧，我用不上了。"他看起来经历了很长很长的旅途——靴子磨破了，斗篷上满是补丁，但他的眼睛干净得像雨后的天空。',
+    options: [
+      { text: '收下礼物', require: {}, effects: { 运气: 5, 魅力: 2 }, narrative: '他送了你一块形状奇特的石头，温润如玉。你后来把这块石头带在身边很多年。每当你遇到困难，就把它握在手里。你知道它只是一块石头——但你总觉得，那个陌生人的善意还留在上面，像一个永远不会熄灭的小火炉。' },
+      { text: '谢绝', require: {}, effects: { 智慧: 3 }, narrative: '"我不能要。"你把东西推了回去。他笑了笑，没说什么，收好东西继续往前走。你看着他的背影消失在路的尽头，忽然觉得自己失去的不只是一个礼物——而是一个永远无法弥补的契机。' },
+    ],
+  },
+  {
+    id: 'extra_08', stages: ['壮年', '中年', '中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, title: '忏悔者',
+    narrative: '一个全身裹着灰色斗篷的人跪在你的门前。他的嗓音沙哑得几乎听不清："我做了无法被原谅的事。所有神父都不敢听我的忏悔。有人告诉我——你也许敢。"你低头看着他颤抖的肩膀，闻到了他身上积攒了不知多少年的悔恨的味道。',
+    options: [
+      { text: '听他忏悔', require: {}, effects: { 道德: 10, 声望: 5 }, narrative: '你坐在门槛上，听了他整整一个晚上。他说的那些事让你后背发凉，但你始终没有打断。天亮时，他停止了讲述，眼睛里终于有了一点光。"谢谢你，"他在门外跪了最后一跪，然后站起身走了。你再没见过他——但你总觉得，那天晚上你多救了一个人。' },
+      { text: '关门拒绝', require: {}, effects: { 道德: -3 }, narrative: '你摇了摇头，关上了门。这世上有些人犯的错不是别人能怜悯的。但关门之后，你在门口站了很久。是恐惧吗？是厌恶吗？还是怕面对那个也许同样需要忏悔的自己？你最终没有打开门。' },
+    ],
+  },
+  {
+    id: 'extra_09', stages: ['青年', '壮年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, title: '龙牙拍卖会',
+    narrative: '王都的地下拍卖会开幕了——压轴的是一颗真正的龙牙，据说能延长持有者的寿命。起价直接叫到了一万金币。全场气氛热烈得能把空气点燃：贵族们在互相抬价，冒险者们在窃窃私语，角落里坐着几个眼神不善的黑袍人。你掂了掂自己的钱袋。',
+    options: [
+      { text: '参与竞拍', require: { 财富: 8000 }, effects: { 财富: -7000, 体质: 10, 声望: 20 }, narrative: '你以全场最高的价格拿下了龙牙。从此你把它挂在胸口，日夜不离。有人说你在阳光下会偶尔闪烁出一道微微的鳞光——也许只是错觉，也许不是。龙牙会守护你——但守护从来不是免费的。' },
+      { text: '旁观不参与', require: {}, effects: { 智慧: 3 }, narrative: '你坐在角落里饶有兴致地看着这场闹剧。龙牙最终被一个富商用十万金币拍下——据说他第二天就让人把龙牙磨成了粉泡在酒里，一口气喝了个精光。后来他病了一个月。有些东西，不是花钱就能驾驭的。' },
+    ],
+  },
+  {
+    id: 'extra_10', stages: ['中年', '中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, title: '广场上的演说',
+    narrative: '王城的广场上聚集了上千人——一场关于"要不要接纳难民"的辩论正变得火药味十足。两派的人快要打起来了。有人认出了你，把你推上了讲台。"你说吧！"下面瞬间安静下来。所有人都在看着你。',
+    options: [
+      { text: '呼吁接纳', require: { 魅力: 80 }, effects: { 声望: 30, 道德: 15 }, narrative: '"如果我们今天关上了门——明天我们的儿子们逃到别人的门口时，谁给他们开门？"你的话像一颗石头丢进了平静的湖面。起初是沉默，然后是零落的掌声，最后是雷鸣般的掌声。广场上安静了下来——不是因为恐惧，而是因为思考。' },
+      { text: '保持中立', require: {}, effects: { 智慧: 5 }, narrative: '"我不是来替你们做决定的。"你把话筒放下来，走下了讲台。人群里发出失望的叹息声。但你知道——有些决定不该由别人来做。你给不了答案，但也许你的沉默能让他们自己去找答案。' },
+    ],
+  },
+  // ===== 纯叙事事件（无选择，仅推进故事） =====
+  {
+    id: 'narr_01', stages: ['青年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, narrativeOnly: true, options: [], title: '远方的来信',
+    narrative: '一个寻常的下午，一只灰色的信鸽落在你的窗台上，腿上绑着一卷小小的羊皮纸。你拆开一看——是从故乡来的。信上说，村口那棵你小时候爬过的老槐树今年被雷劈成了两半，但春天来的时候，裂开的树干上居然发了新芽。你捏着信纸站了很久，直到夕阳把你的影子拉得老长。',
+  },
+  {
+    id: 'narr_02', stages: ['壮年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, narrativeOnly: true, title: '雨夜独坐',
+    narrative: '又是一个下雨的深夜。你坐在窗前，看着雨水顺着玻璃缓缓滑落，像是在写某种只有天空能读懂的文字。你给自己倒了一杯温酒，没喝——只是捂着杯子取暖。窗外的雨声里，你隐隐约约听见了多年前自己的笑声。那时候的你，还不知道什么叫"生活"。你笑了笑，端起酒喝了一口——敬当年那个什么都不怕的自己。',
+  },
+  {
+    id: 'narr_03', stages: ['中年', '中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, narrativeOnly: true, title: '集市偶遇',
+    narrative: '集市上人来人往，你提着刚买的菜穿过人群。忽然有人轻轻碰了碰你的手臂。你回头——是一个你并不认识的中年人。他不好意思地笑了笑："抱歉，您长得很像我父亲。"你愣了一下，还没来得及回话，他已经消失在人群里了。你站在那里，提着菜，想了很久——也许每个人都是别人的一个影子，也许这个世上并没有真正的陌生人。',
+  },
+  {
+    id: 'narr_04', stages: ['老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, narrativeOnly: true, title: '炉火边的回忆',
+    narrative: '炉火烧得噼啪作响，你裹着毛毯坐在摇椅上，看火焰舔着铁炉的边沿。一张张面孔在火光中浮现——有的已经离开了很久，有的还在某个远方继续着他们的故事。你闭上眼睛，那些曾经惊天动地的大事，此刻都化作了一缕缕柔软的回忆，像炉火一样，静静地温暖着你的晚年。没有遗憾，也没有遗憾的必要——一切都刚刚好。',
+  },
+  {
+    id: 'narr_05', stages: ['青年', '壮年'], minAttr: {}, vision: '', difficulty: '',
+    requireFlag: 'guild', weight: 7, narrativeOnly: true, title: '公会里的日常',
+    narrative: '今天公会没什么大事。一个新手弄丢了任务卷轴，被管事吼了半个时辰。老厨师炖了一锅浓汤，香气从食堂一直飘到训练场。你拿着木剑对着假人练了一下午的劈刺，汗湿了整件上衣。天黑时你坐在屋顶上，啃着一块干面包，看着城里的灯火一盏一盏亮起来。冒险者的生活大多时候不是屠龙，而是这样——琐碎、重复、但莫名让人安心。',
+  },
+  {
+    id: 'narr_06', stages: ['壮年', '中年'], minAttr: {}, vision: '', difficulty: '',
+    requireFlag: 'mageElite', weight: 7, narrativeOnly: true, title: '藏书室的一夜',
+    narrative: '魔法塔的藏书室今晚只有你一个人。蜡烛的火苗在轻微的穿堂风里跳着舞，古老的书籍在书架上散发出霉味和纸墨混合的奇异香气。你翻到一本不知是谁写的笔记——上面画满了被放弃的法术草稿，每一个都被划了叉。扉页上写着："失败比成功更值得被记住，因为每一次失败都曾离成功只差一步。"你合上书，决定不走了——今晚就睡在藏书室吧，闻着知识和灰尘的味道入睡。',
+  },
+  {
+    id: 'narr_07', stages: ['青年', '壮年'], minAttr: {}, vision: 'wealthy', difficulty: '',
+    weight: 7, narrativeOnly: true, title: '金库的钥匙',
+    narrative: '你站在自己的金库门口，数了数手上沉甸甸的钥匙。铜的、银的、金的——每一把都对应着一个仓库、一箱货、一船还在海上漂着的香料。你回想了一下二十年前口袋里只有三枚铜板的自己。你关上门，把钥匙揣进怀里，对自己轻轻说了一句："还差得远呢。"然后你笑着走向下一个生意。',
+  },
+  {
+    id: 'narr_08', stages: ['少年', '青年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, narrativeOnly: true, title: '山顶的日出',
+    narrative: '你花了整整一个晚上爬上了最近的那座高山。快到山顶的时候差点滑下去——如果不是一根老树根正好伸在那里，你大概已经滚下山了。到达山顶时，天边正好裂开第一道金线。太阳从云海中升起，把万物都镀上了一层柔软的光。你坐在山顶上，裹着被汗浸湿的外套，忽然觉得——一切都会好起来的。这个词太简单了，但此刻，它是真的。',
+  },
+  {
+    id: 'narr_09', stages: ['中年', '中老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 5, narrativeOnly: true, title: '旧物箱里的信',
+    narrative: '你整理阁楼时翻出了一个布满灰尘的旧木箱。里面没有珠宝，没有装备，只有几封信、一张旧票根、一块碎掉的护身符、一条早已褪色的发带。你的手指慢慢滑过每一件东西，像是滑过岁月的纹路。你不确定自己是在回忆——还是在跟过去的自己说再见。最终你把箱子合上，但没有放回阁楼。你把它拿到了床头——让你每晚入睡前，都能看一眼。',
+  },
+  {
+    id: 'narr_10', stages: ['老年'], minAttr: {}, vision: '', difficulty: '',
+    weight: 6, narrativeOnly: true, options: [], title: '最后的春天',
+    narrative: '这是你的不知第几个春天了。窗外的樱花开得铺天盖地，风一吹就落得到处都是。你拄着拐杖走到院子里，发现去年种的那棵小树苗已经比你高了。你摸了摸它的叶子，感觉它正在拼命吸收阳光和雨露——正如你年轻时那样拼命。你坐在树下的石凳上，闭上眼睛。春风拂过你的白发，像一个温柔的告别。也许不是告别——只是一种安静的陪伴。',
+  },
+  // ===== 扩展事件 =====
+  { id: 'baby_05', stages: ['婴儿'], minAttr: {}, vision: '', difficulty: '', weight: 5, narrativeOnly: true, options: [], title: '满月宴', narrative: '家族为你办了热闹的满月宴。七大姑八大姨轮流抱你，你被传了一圈又一圈，脸上被亲了不知多少口。有人往你的襁褓里塞了红包，有人往你的额头上点了朱砂。你什么都不记得——但许多年后翻看老相册，看到那张全家福，你能从每个人的笑容里读出一个词：希望。' },
+  { id: 'baby_06', stages: ['幼年'], minAttr: {}, vision: '', difficulty: '', weight: 5, narrativeOnly: true, options: [], title: '抓周', narrative: '一岁生日那天，大人们在桌上摆满了东西：一本书、一柄小木剑、一枚金币、一支笔。你被放在桌边，所有人屏住呼吸。你爬过金币，绕过木剑，在书和笔之间犹豫了很久——然后一把抓住了两样。奶奶笑得合不拢嘴："这孩子，文武双全！"' },
+  { id: 'child_05', stages: ['童年', '幼年'], minAttr: {}, vision: '', difficulty: '', weight: 6, title: '小动物', narrative: '你在路边发现了一只受伤的小动物——毛茸茸的，蜷缩在草丛里瑟瑟发抖，用一双湿漉漉的眼睛看着你。你的心一下子软了。', options: [
+    { text: '带回家养', require: {}, effects: { 道德: 5, 魅力: 3, 财富: -20 }, narrative: '你用零花钱给它买了药和食物。它慢慢康复了，成了你童年最好的伙伴。每天放学它都在门口等你，摇着尾巴冲过来。它教会了你什么是责任——也教会了你什么是无条件的爱。' },
+    { text: '帮它找主人', require: {}, effects: { 魅力: 3, 道德: 3 }, narrative: '你挨家挨户地问，终于找到了它的主人——一位独居的老奶奶。她抱着它哭了。"这是我老伴留下的……"从那以后，你每隔几天就去探望他们，直到老奶奶把你当成了亲孙子。' },
+  ]},
+  { id: 'child_06', stages: ['童年'], minAttr: {}, vision: '', difficulty: '', weight: 5, title: '偷吃被抓', narrative: '厨房里飘出的香味像一只无形的手，把你从床上拽了起来。你踮着脚尖溜进厨房，伸手去够桌上那盘刚烤好的蜂蜜饼干。手指刚碰到饼干——"咳。"母亲站在门口，双臂交叉，眉毛挑得老高。', options: [
+    { text: '老实认错', require: {}, effects: { 道德: 5, 魅力: 2 }, narrative: '"对不起，妈妈。"你低下头，把饼干放了回去。母亲愣了一下，然后笑了——她蹲下来抱了抱你，把整盘饼干都给了你。"诚实的孩子值得奖励。"你学到了一句真理：说真话有时候比偷吃更甜。' },
+    { text: '编个借口', require: {}, effects: { 魅力: 3, 智慧: 2, 道德: -2 }, narrative: '"我……我听见厨房里有老鼠，来帮你看看！"你脸不红心不跳地编着。母亲看了你三秒，大笑起来。"老鼠？那你嘴里嚼的是什么？"你被罚洗了一周碗——但也学会了一个技能：撒谎的时候要先把嘴擦干净。' },
+  ]},
+  { id: 'youth_05', stages: ['少年'], minAttr: {}, vision: '', difficulty: '', weight: 6, title: '离家出走', narrative: '你和家里大吵了一架。原因已经不重要了——也许是不让你学剑，也许是逼你学经商，也许只是青春期的荷尔蒙在造反。总之你把几件衣服塞进包袱，在深夜翻窗而出。你觉得自己像小说里的侠客。', options: [
+    { text: '第二天就回家了', require: {}, effects: { 道德: 3, 魅力: -2 }, narrative: '你在外面冻了一夜，饥肠辘辘，连一只野狗都欺负你。第二天早上你灰溜溜地回了家。母亲什么都没说，只是给你盛了一碗热粥。你喝着粥，觉得这是世界上最好吃的东西。' },
+    { text: '坚持了一个月', require: { 体质: 40 }, effects: { 体质: 8, 敏捷: 5, 智慧: 3 }, narrative: '你在外面吃了不少苦——给商队搬货、在酒馆洗碗、跟流浪艺人学了两首歌。一个月后你回到家，晒黑了，也结实了。家人看你的眼神变了——不再是看个孩子，而是看一个能扛事的人。' },
+  ]},
+  { id: 'youth_06', stages: ['少年'], minAttr: {}, vision: '', difficulty: '', weight: 6, title: '地下竞技场', narrative: '有人在悄悄招募年轻人参加地下竞技——不打生死，只切磋，赢了有赏金。空气里弥漫着汗水和铁锈的味道，灯光昏暗，但观众的眼睛亮得吓人。你被推到了台前——对手是一个块头比你大一倍的少年。', options: [
+    { text: '上台比试', require: { 力量: 40 }, effects: { 力量: 8, 财富: 100, 声望: -5 }, narrative: '你在擂台上挨了不少揍，但也揍了对方不少。三回合后裁判举起了你的手。观众席爆发出喝彩——还有一些人把赌注狠狠摔在了地上。你揣着赢来的金币走出地下室，虽然脸上还火辣辣地疼。' },
+    { text: '拒绝', require: {}, effects: { 智慧: 3, 道德: 3 }, narrative: '你看了看擂台上的血迹，转身走了。有人在背后吹口哨嘲笑你。你没有回头。两年后你听说那个地下竞技场被卫兵查封了——老板用假药坑选手，好几个人被打成了终身残疾。你打了个冷噤。' },
+  ]},
+  { id: 'adult_05', stages: ['青年'], minAttr: {}, vision: '', difficulty: '', weight: 6, title: '远航招募', narrative: '港口停着一艘前所未见的大船——三桅的远洋帆船，目的地是传说中盛产香料的东方大陆。船长正在招募船员。"谁想看看世界尽头的模样？"他的喊声被海风吹散，但你的耳朵已经竖了起来。', options: [
+    { text: '签下船员契约', require: {}, effects: { 敏捷: 8, 运气: 5, 财富: 300 }, narrative: '海上的生活比你想象中更艰苦——但也更壮丽。你见过鲸鱼跃出海面、暴风雨把船抛到三层楼高、日出时整个海面变成流动的金子。一年后你带着异域的货物和故事回来了。你的皮肤被海风磨粗了，但你的眼神比出海前亮了十倍。' },
+    { text: '送别他们', require: {}, effects: { 魅力: 3 }, narrative: '你在港口站了很久，目送那艘船消失在海平面上。心里有那么一点后悔——但你还有自己的路要走。船出航后的第三个月，你听说它在风暴中差点沉了，死了三个水手。你想：也许明天出发也不迟。也许。' },
+  ]},
+  { id: 'adult_06', stages: ['青年'], minAttr: {}, vision: '', difficulty: '', weight: 6, title: '赏金猎人', narrative: '镇上公告栏贴着一张悬赏令：一个臭名昭著的土匪头子，悬赏八百金币。肖像画得很潦草，但奖金数额写得很清楚。你旁边也有人在盯着这张悬赏令——他们的手指都在不自觉地摸向武器。', options: [
+    { text: '接下悬赏', require: { 力量: 65, 敏捷: 50 }, effects: { 力量: 8, 财富: 800, 声望: 20 }, narrative: '你追了那个土匪整整七天，在沼泽边缘截住了他。打斗很短暂——他的刀法粗糙，靠的是人多势众而不是真功夫。你把他捆回镇上时，整条街的人都出来看。赏金到手——但你看着铁窗里那个面黄肌瘦的人，忽然觉得他也许只是另一个走了岔路的可怜人。' },
+    { text: '不参与', require: {}, effects: { 智慧: 3 }, narrative: '你把悬赏令从公告栏上撕下来，折好塞进口袋——不是去追，而是防止别人看到。然后你继续赶路。这种亡命之徒的活，留给那些没有选择的人吧。' },
+  ]},
+  { id: 'adult_07', stages: ['青年'], minAttr: {}, vision: '', difficulty: '', weight: 5, narrativeOnly: true, options: [], title: '王宫舞会', narrative: '你收到了一张请柬——也许是某个贵族欠你的人情，也许是某个你帮过的人记得你。总之你穿上最体面的衣服，走进了王宫的大理石舞厅。水晶吊灯像凝固的瀑布，小提琴手在角落里拉着忧伤的旋律，穿着丝绸长裙的女士们像五彩的鱼一样旋转。你在角落里端着一杯香槟，觉得自己像是一个误入了童话世界的乞丐。但没有人赶你走。有那么一瞬间——你觉得自己真的属于这里。' },
+  { id: 'prime_05', stages: ['壮年'], minAttr: {}, vision: '', difficulty: '', weight: 6, title: '领地争端', narrative: '你的领土和邻接的领主发生了边界纠纷——双方都在边境上竖了界碑，每一方都声称自己是对的。农民们不敢在那片地上种庄稼了，因为不知道谁会来收税。剑拔弩张的气氛让人想起即将着火的干柴。', options: [
+    { text: '谈判解决', require: { 魅力: 80 }, effects: { 声望: 25, 道德: 10, 魅力: 5 }, narrative: '你请对方领主来你的城堡喝了三天的酒。第三天晚上，你们在一张餐巾纸上画了一条双方都能接受的边界线。他走的时候拍了拍你的肩膀："下次你来我的地盘——带酒来。"战争避免了，而你多了一个盟友。' },
+    { text: '武力威胁', require: { 力量: 100 }, effects: { 力量: 8, 声望: 15, 道德: -10 }, narrative: '你在边境集结了一支精锐部队，在界碑前进行了三天军事演习。对方领主派来一个使者——说话的时候声音都在抖。第二天界碑被移到了你指定的位置。你赢了——但边境上的农民从此看你的眼神里多了一层畏惧。' },
+  ]},
+  { id: 'prime_06', stages: ['壮年'], minAttr: {}, vision: '', difficulty: '', weight: 6, title: '伏击商队', narrative: '有人在酒馆里悄悄塞给你一张纸条：一支载满黄金的商队今晚会经过黑风谷，只带六个护卫。纸条上还有一行小字：「干一票，后半辈子不用愁。」你的手心出汗了。', options: [
+    { text: '参与伏击', require: { 敏捷: 70 }, effects: { 财富: 3000, 道德: -25, 声望: -20 }, narrative: '你们在黑风谷设伏，商队几乎没有还手之力。黄金多得你一个人搬不动。但你那天晚上一夜没睡着——因为一个商队护卫临死前看了你一眼，那双眼睛像烙铁一样烫在你心里。此后你每次闭上眼睛，都能看到那双眼睛。' },
+    { text: '告发伏击计划', require: {}, effects: { 声望: 20, 道德: 15 }, narrative: '你连夜找到了城卫队，把计划全盘托出。卫队长亲自带队埋伏在黑风谷——不过这次是伏击伏击者。第三天，你以"治安功臣"的身份被郡守亲自嘉奖。那个给你送纸条的人被绞死了——你看着他被吊起来时，心情极度复杂。' },
+  ]},
+  { id: 'prime_07', stages: ['壮年'], minAttr: {}, vision: '', difficulty: '', weight: 5, narrativeOnly: true, options: [], title: '建造城堡', narrative: '你买下了一片荒地，开始建造自己的城堡。第一块基石是你亲手放下的——一铲下去，泥土翻出新生的气息。工程持续了两年。石匠、木匠、玻璃匠轮流进场，脚手架拆了又搭。落成那天，你站在最高的塔楼上，看着夕阳把石墙染成金红色。这是你的家——不是继承的，不是租来的，是你一砖一瓦亲手建起来的。风吹过塔楼，像是这座城堡在轻轻地呼吸。而你站在它的心脏里。' },
+  { id: 'prime_08', stages: ['壮年'], minAttr: {}, vision: 'hero', difficulty: '', weight: 10, title: '龙岩之战（愿景专属）', narrative: '一条成年红龙盘踞在龙岩山上，已经烧毁了三个村庄。国王发布了SS级紧急任务——任何能驱逐或击杀这条龙的冒险者，将获得世袭爵位和封地。你需要的一切——力量、声望、勇气——都已经积累了很久。今天，就是检验这一切的时刻。', options: [
+    { text: '正面屠龙', require: { 力量: 130, 体质: 100 }, effects: { 力量: 15, 声望: 80, 体质: -10 }, setFlag: 'dragonSlayer', narrative: '你在龙岩山顶与红龙厮杀了整整一个上午。龙息把你的盾牌烧成了铁水，龙尾把你的肋骨扫断了三根。但你最终把剑刺进了它的心脏。巨大的身躯轰然倒下时，整个山谷都在震动。你浑身是血地站在龙尸上，天空下起了雨——把血和雨水混在一起，流进了山谷。整个王国都在传唱你的名字。' },
+    { text: '智取', require: { 智慧: 110 }, effects: { 智慧: 10, 声望: 60 }, narrative: '你没有正面硬碰。你研究了龙的习性，在它外出觅食时潜入了洞穴，搬走了所有的龙蛋。你站在洞口等着红龙回来，把一个龙蛋高高举起。红龙和你对视了很久——然后低下了头。它带着蛋飞走了，再也没有回来。没有屠龙，但你救了三个村庄而不用流一滴龙血。这才是真正的勇者。' },
+  ]},
+  { id: 'mid_04', stages: ['中年'], minAttr: {}, vision: '', difficulty: '', weight: 6, title: '政变阴谋', narrative: '王国发生了政变——至少是未遂的。反对派试图推翻国王，在背后拉拢所有有影响力的人。你在他们的名单上——确切地说，在"必须争取"的那一栏，画了三个圈。两拨人都派了使者来见你。', options: [
+    { text: '支持国王', require: {}, effects: { 声望: 30, 道德: 10 }, narrative: '你公开宣布效忠王座。政变被镇压后，国王在朝堂上亲自起立向你鞠了一躬。"在最黑暗的时刻，你是那盏没有熄灭的灯。"你在王国中的地位从此无人能动摇。' },
+    { text: '保持中立', require: {}, effects: { 智慧: 5, 运气: -3 }, narrative: '你假装生病，闭门谢客整整两个月。政变失败了，但也没有人怪到你头上。你看着双方在你门前留下的密信，一把火烧了它们。有的时候，不站队本身就是一种站队——而站错队的人已经在牢里了。' },
+  ]},
+  { id: 'mid_05', stages: ['中年'], minAttr: {}, vision: '', difficulty: '', weight: 6, title: '瘟疫来袭', narrative: '一种未知的瘟疫从南方港口蔓延而来。感染者先是发烧，然后皮肤上出现黑色斑点，最后——通常在第七天——停止呼吸。城镇开始封路，人们躲在家里不敢出门。空气中飘着焚烧草药的苦涩气味。你看见城门口堆满了逃难者的行李。', options: [
+    { text: '组织隔离和救治', require: { 声望: 150 }, effects: { 声望: 40, 道德: 20, 财富: -1000 }, narrative: '你打开了自己的仓库，把粮食和药材分发给病人。你请来了王国最好的医师，在城外搭建了临时隔离区。疫情持续了三个月——但因为你早期的果断行动，死亡率比别的城镇低了一半。人们不再叫你的名字——他们叫你"那盏灯"。' },
+    { text: '封锁城门，自保为主', require: {}, effects: { 体质: 8, 道德: -10 }, narrative: '你下令将病人集中隔离在城墙外的一片荒地。里面有你的朋友、你的邻居、你的旧部。你看着他们被封在门外——有些人隔着城墙朝你喊话，你没有回应。疫情结束后，你活了下来。但你走过街道时，那些空无一人的屋子里，沉默比任何控诉都要响亮。' },
+  ]},
+  { id: 'mid_06', stages: ['中年'], minAttr: {}, vision: 'wealthy', difficulty: '', weight: 10, title: '垄断贸易（愿景专属）', narrative: '你掌握了大陆上最重要的贸易路线——连接东西方的唯一安全通道。现在你有两个选择：竞争，还是垄断。前者可能被超越，后者意味着所有竞争对手都会被你的体量碾碎。你的财富已经达到临界点——再往前走一步，整个市场的规则将由你来写。', options: [
+    { text: '建立商业帝国', require: { 财富: 50000 }, effects: { 财富: 30000, 声望: 40, 道德: -15 }, setFlag: 'merchantKing', narrative: '你通过兼并收购，在三年内控制了整条贸易路线。所有商队都必须向你缴纳通行费，所有港口都必须挂你的旗帜。你坐在办公室里，看着地图上每一个被你的航线覆盖的港口，像一位国王看着自己的版图。你不是贵族——但你已经比大多数贵族都要富有十倍。' },
+    { text: '开放竞争', require: {}, effects: { 声望: 20, 道德: 10, 财富: 5000 }, narrative: '你把通行费维持在了一个合理的水平，让小型商队也有生存空间。你的市场份额也许没有垄断那么高——但你的名字在整个商界被尊敬。没有人诅咒你，没有人密谋推翻你。有时候，名声比利润更值得投资。' },
+  ]},
+  { id: 'late_04', stages: ['中老年'], minAttr: {}, vision: '', difficulty: '', weight: 5, narrativeOnly: true, options: [], title: '退休计划', narrative: '你开始认真地想一个问题：退休之后做什么？在花园里种玫瑰？写一本回忆录？收养一只猫？你在纸上列了长长一串清单，然后又划掉了一大半。你忽然意识到——你从来没有学过如何"不做任何事"。你的手习惯了忙碌，你的脑习惯了计划，你的心习惯了追逐。也许退休的第一课，是允许自己什么都不做。你靠在椅背上，闭上眼睛，第一次尝试着不去想明天。' },
+  { id: 'late_05', stages: ['中老年'], minAttr: {}, vision: '', difficulty: '', weight: 6, title: '皇家狩猎', narrative: '国王邀请你去皇家猎场——一片普通人一辈子都进不去的原始森林。秋季正是鹿群最肥美的时候，空气中弥漫着松针和泥土的味道。你骑着一匹栗色的猎马，腰间挂着弓，旁边是国王和他的亲卫队。', options: [
+    { text: '猎一头雄鹿', require: { 敏捷: 70 }, effects: { 声望: 15, 敏捷: 5 }, narrative: '你屏住呼吸，拉开弓弦。箭矢穿过树林的间隙，正中目标。猎人们为你喝彩。国王亲自下马走过来，拍了拍你的肩膀："好身手！"晚上在篝火旁，你被安排坐在离国王最近的位置。' },
+    { text: '享受自然', require: {}, effects: { 体质: 5, 道德: 5 }, narrative: '你把弓箭挂在马鞍上，只是骑着马在森林里穿行。秋天的树叶在阳光下像燃烧的金箔。你不需要证明什么了——能够在这样一个下午，安静地看一只鹿从你面前悠然走过，这本身就是一种特权。' },
+  ]},
+  { id: 'late_06', stages: ['中老年'], minAttr: {}, vision: 'sage', difficulty: '', weight: 10, title: '最后的公式（愿景专属）', narrative: '你的研究触及了魔法的终极命题——统一场论。如果能完成，你就可以用一个公式解释所有魔法现象。这是任何一位大法师都未曾做到的壮举。你的桌上堆满了草稿纸、用秃的羽毛笔、空了的墨水瓶。窗外天色从黑变白又从白变黑。你已经不记得今天是星期几了。', options: [
+    { text: '完成公式', require: { 智慧: 160 }, effects: { 智慧: 20, 声望: 100 }, setFlag: 'grandSage', narrative: '你在一个下着暴雪的深夜写完了最后一行推导。你的手在发抖——不是因为冷，而是因为你意识到你完成了前人七百年都没能完成的事。你把公式写在一张羊皮纸上，签上自己的名字，然后趴在桌上睡着了——这是你三个月来第一次安稳的睡眠。第二天，整个魔法界为之震动。你的名字被写进了每一本魔法教科书的扉页。' },
+    { text: '放弃，公式太危险', require: {}, effects: { 道德: 15, 智慧: 5 }, narrative: '你看着那张几乎完成的公式，沉默了很久。你忽然意识到——如果有人用这个公式，可以在一瞬间摧毁一座城市。你把所有草稿收起来，锁进一个只有你知道密码的保险柜。你没有成为名垂青史的大法师——但你保住了世界。而这一点，只有天知、地知、你知。' },
+  ]},
+  { id: 'old_05', stages: ['老年'], minAttr: {}, vision: '', difficulty: '', weight: 6, title: '神秘的预言', narrative: '来访者是一个你从未见过的女人，披着深紫色的斗篷。她自称来自未来——"不是比喻，是字面意思。"她说她在时间裂隙中看到过你的终点。"你想知道你是怎么死的吗？"她的眼睛没有任何感情——像两扇通往某个无尽深渊的窗户。', options: [
+    { text: '听她说', require: {}, effects: { 智慧: 8, 运气: -3 }, narrative: '她低声在你耳边说了一句话。你的脸一下子白了。她没有再说什么，转身走入黑暗。从此你再也无法忘记那句话——而你也永远不会告诉任何人内容。有些秘密，就是用来带进坟墓的。' },
+    { text: '拒绝聆听', require: {}, effects: { 运气: 5, 道德: 3 }, narrative: '"我不需要知道。"你打断了她。她微微一笑——笑容里有某种近似于赞赏的东西。"很好。大多数人是承受不了答案的。"她站起来，在出门前回头看了你一眼："你是少数人。保重。"然后她再也没出现过。' },
+  ]},
+  { id: 'old_06', stages: ['老年'], minAttr: {}, vision: '', difficulty: '', weight: 5, narrativeOnly: true, options: [], title: '最后的晚餐', narrative: '你把还活着的、还在联系的老朋友们都请到了家里。一共七个人，围着一张圆桌，几盘小菜，几瓶旧酒。你们聊了一整晚——聊年轻时的糗事，聊那些已经不在的人，聊世界变了多少。没有人提"最后一次"这个字眼，但每个人心里都清楚。散席时，大家站在门口互相看了很久，握手的时间都比平时长了一些。你目送他们走远，灯光一盏盏消失在夜色里。你关上门，对自己说：今晚是这些年来最好的一夜。' },
+  { id: 'common_09', stages: ['青年', '壮年', '中年'], minAttr: {}, vision: '', difficulty: '', weight: 5, title: '驯服野兽', narrative: '你在野外遇见了一头受伤的猛兽——满身伤疤的灰色巨狼，一条后腿被捕兽夹咬得血肉模糊。它冲你龇着牙，喉咙里翻涌着低沉的咆哮。但它的眼睛里除了凶狠，还有另一种东西——也许是疲惫，也许是求生的本能。', options: [
+    { text: '尝试救治', require: { 魅力: 60, 体质: 50 }, effects: { 魅力: 8, 力量: 5 }, setFlag: 'tamedBeast', narrative: '你花了整整一个月和这头巨狼建立信任。每天早上你放下肉，退到安全距离，等它来吃。第三十天——它没有对你咆哮。你伸出手，它用湿凉的鼻子碰了碰你的指尖。从那以后，它成了你最忠实的伙伴。再也没有人敢在深夜里靠近你的帐篷。' },
+    { text: '给它解脱', require: {}, effects: { 力量: 3, 道德: -5 }, narrative: '你看着它的伤口——太深了，已经生了蛆。你拔出匕首，给了它一个快速的解脱。它甚至没有挣扎。站起来时，你的手在发抖——不是因为恐惧，而是因为你知道自己做了一件正确但不轻松的事。你把它的尸体埋在了溪边，用石头堆了一个小小的坟。' },
+  ]},
+  { id: 'common_10', stages: ['青年', '壮年', '中年'], minAttr: {}, vision: '', difficulty: '', weight: 5, title: '沙漠之旅', narrative: '你跟随一支骆驼商队穿越了被称为"焚骨之地"的大沙漠。白天的太阳像烙铁，夜晚的温度却让你裹着毯子还在发抖。第三天，你们迷路了——向导说指南针在这片沙漠里不管用，因为地下有一种奇怪的磁性矿石干扰方向。水已经不多了。', options: [
+    { text: '根据星象导航', require: { 智慧: 70 }, effects: { 智慧: 8, 声望: 15 }, narrative: '你在魔法塔里读过一本关于天文导航的书——没想到会在这时候派上用场。你抬头看着夜空，认出了北十字星座。两天后，商队走出了沙漠。所有人都在沙地上对你磕头——他们认定了你是上天派来的救星。' },
+    { text: '节约水源，等待救援', require: {}, effects: { 体质: 5, 运气: 5 }, narrative: '你把水分成最小份，让大家原地扎营。第六天，一支路过的游牧部落发现了你们。他们分享了自己的水和食物，把你们带到了绿洲。获救那天你喝了三碗骆驼奶——那是你一生中喝过最甜的东西。' },
+  ]},
+  { id: 'common_11', stages: ['少年', '青年', '壮年'], minAttr: {}, vision: '', difficulty: '', weight: 5, title: '地下交易', narrative: '有人在黑市上找你。"我听说你能搞到一般人搞不到的东西。"他递给你一张购物清单——上面全是违禁品：走私的魔法石、被教会禁止的炼金配方、一套据说能挡住任何刀剑的龙鳞盔甲。报酬是让你眼珠子都要掉出来的数字。', options: [
+    { text: '接单去搞', require: { 敏捷: 70 }, effects: { 财富: 2500, 声望: -15, 道德: -10 }, narrative: '你花了三个月，辗转三个国家，在法律的灰色地带完成了这笔交易。钱到手了——但你也因此上了好几个组织的黑名单。以后每到一个新城市，你都先检查有没有便衣在跟踪你。这种日子很刺激，但也太累了。' },
+    { text: '拒绝', require: {}, effects: { 道德: 8 }, narrative: '你把清单还给他。"你找错人了。"他盯着你看了几秒，然后走了。你后来听说有一个人接了这个单——两星期后他的尸体在港口被发现。你倒吸一口凉气。有些钱，不是用来赚的。' },
+  ]},
+  { id: 'common_12', stages: ['青年', '壮年', '中年'], minAttr: {}, vision: '', difficulty: '', weight: 5, title: '矿难救援', narrative: '远处的矿山忽然传来一声巨响——然后就是刺耳的警钟声。矿道塌了，三十多个矿工被困在地下。你不知道里面还有没有活人，但你知道每多等一分钟，生还的希望就少一分。已经有人开始往矿口跑，手里拿着铁锹和绳索。', options: [
+    { text: '带队救援', require: { 体质: 70, 力量: 60 }, effects: { 声望: 35, 道德: 20, 体质: -5 }, narrative: '你戴上安全帽，点了火把，第一个钻进还在掉碎石的矿道。你们挖了整整六个小时，挖出了二十多个活人——有些人已经昏迷，有些人紧紧抱在一起。最后一个被救出来的是老矿长，他出来时不说一句话，只是握着你的手跪下了。你没有让他跪——你把他拉起来，给了他一个满是灰尘的拥抱。' },
+    { text: '在外面协助', require: {}, effects: { 声望: 10, 道德: 5 }, narrative: '你不是矿工出身，没有下井的经验，但你在外面帮了大忙——组织临时医疗点、运送伤者、安抚家属。救援持续了一天一夜。最终统计：死了六个，活了二十四个。如果不是你的医疗点，活下来的可能只有二十个。那些被救的矿工每年都会给你寄一封信。' },
+  ]},
+  { id: 'extra_11', stages: ['青年', '壮年', '中年'], minAttr: {}, vision: '', difficulty: '', weight: 5, title: '河流游泳', narrative: '炎热的夏日，你路过一条清澈得能看见河底的溪流。一群村民正在水里嬉戏，笑声和泼水声交织在一起。你也脱掉靴子，把脚伸进冰凉的河水里。有人朝你泼了一捧水，你笑了——已经记不起上次这么放松是什么时候。', options: [
+    { text: '跳下去一起玩', require: {}, effects: { 魅力: 5, 体质: 3 }, narrative: '你纵身一跃跳进了河里，溅起了巨大的水花。那一整个下午你什么都没想——没有明天的行程、没有未了的恩怨、没有需要做出的选择。就是水，阳光，笑声。这样的下午一辈子没有几个，所以你记住了每一个。' },
+    { text: '坐在岸边看着', require: {}, effects: { 智慧: 3 }, narrative: '你微笑着坐在岸边，看别人在水里玩。不参与有它的乐趣——宁静、旁观、感受时间的流动。一个女孩从水里跑上来，递给你一个从河底捡的漂亮石子。"送你。"你接过来，放在手心里。它现在还放在你的书桌上。' },
+  ]},
+  { id: 'extra_12', stages: ['壮年', '中年', '中老年'], minAttr: {}, vision: '', difficulty: '', weight: 5, narrativeOnly: true, options: [], title: '午后的屋檐', narrative: '雨停了。你坐在屋檐下，看着水珠一滴一滴从瓦片的边缘滑落。空气里有雨后的青草味——那是一种让你想起童年的味道。隔壁院子里，有人在弹一把走了调的鲁特琴，音不准，但不知道为什么听着特别顺耳。一只流浪猫跳上你的膝盖，转了两圈，趴下了。你没有赶它走——你只是继续看着水滴。这样的午后什么也没发生。而这正是它最珍贵的地方。' },
+  { id: 'extra_13', stages: ['中年', '中老年', '老年'], minAttr: {}, vision: '', difficulty: '', weight: 5, narrativeOnly: true, options: [], title: '博物馆的回声', narrative: '王都开了一家博物馆——大陆上第一家。你的某件战利品被放在了一个玻璃柜里，旁边写着你的名字。你站在人群里，看着一群孩子趴在玻璃上，眼睛亮晶晶地盯着看。一个男孩对同伴说："我以后也要成为这样的人。" 你低下头，笑了——笑着笑着眼眶有点酸。你不知道他会不会真的走上这条路。但你知道，有人因为你而梦想。这就够了。' },
+  { id: 'extra_14', stages: ['老年'], minAttr: {}, vision: '', difficulty: '', weight: 5, narrativeOnly: true, options: [], title: '镜中人', narrative: '清晨洗漱时，你在镜子里看到了一个老人。花了大概三秒钟你才意识到——那就是你自己。你凑近镜子，仔细看着每一道皱纹。每一道纹路你都记得：这道是那年在暴风雪里冻出来的，这道是得知父亲去世时哭出来的，这道是你第一次开怀大笑时就有了的。你对着镜子里的自己点了点头——像是在跟一个老朋友打招呼。镜子里的你也点了点头。你们已经认识了一辈子。' },
+  // ===== 第二波扩展 =====
+  { id: 'baby_07', stages: ['婴儿', '幼年'], weight: 5, narrativeOnly: true, options: [], title: '摇篮曲', narrative: '每天晚上入睡前，母亲都会坐在你的摇篮边，哼唱一首古老的歌谣。你听不懂歌词——那是某种已经失传的语言——但旋律像温水一样包裹着你。很多很多年以后，你会在一个失眠的深夜忽然哼起这段旋律。你已经不记得歌词，不记得母亲的声音，但你还记得那种被深深爱着的感觉。' },
+  { id: 'child_07', stages: ['童年', '幼年'], weight: 6, title: '风筝', narrative: '春天来了，你花了三天时间用竹条和废纸糊了一只风筝。第一次放飞时，它一头栽进了邻居家的烟囱。你不服，修好了又试——第三次它终于飞了起来，越飞越高，高到你看不清它的形状。你牵着线仰着头，觉得自己也能飞。', options: [
+    { text: '比赛放风筝', require: {}, effects: { 敏捷: 3, 魅力: 3 }, narrative: '你和全村的孩子们组织了一场风筝比赛。你的风筝不是最高、也不是最漂亮的——但它在空中翻了一个所有人都没见过的跟头，拿了个"最佳特技奖"。你骄傲了整整一个夏天。' },
+    { text: '独享这一刻', require: {}, effects: { 智慧: 3 }, narrative: '你不跟任何人比。你一个人躺在草地上，放着风筝，看云在蓝天里慢悠悠地飘。你不记得那天是什么日子——这不重要。重要的是，那是你童年里最安静、最完整的一个下午。' },
+  ]},
+  { id: 'child_08', stages: ['童年'], weight: 5, narrativeOnly: true, options: [], title: '外婆的故事', narrative: '外婆是你认识的所有人里最会讲故事的人。她讲的故事里，月亮是一艘银色的大船，星星是散落在海面上的钻石，而风是一位永远不停脚步的邮差。你趴在外婆的膝盖上，听她讲了一整个下午。外婆去世后，你把她的故事一个个写了下来。你没有她的才华——但你在每一页纸上，都闻到了她身上那股淡淡的桂花香。' },
+  { id: 'youth_07', stages: ['少年'], weight: 6, title: '荒野求生', narrative: '你和几个朋友打了一个赌：谁能独自在野外生存七天？赌注是一枚金币。听起来不难——但第一晚的狼嚎就让你缩在睡袋里出了一身冷汗。你带的干粮第三天就吃完了，火折子被雨淋湿了，唯一的武器是一把钝了的水果刀。', options: [
+    { text: '撑到了第七天', require: { 体质: 50 }, effects: { 体质: 8, 力量: 5, 智慧: 5 }, narrative: '你学会了用燧石生火、识别可食用浆果、用树枝搭避难所。第七天你走出森林时，瘦了三斤，但你的眼神变了——变得像一头年轻的狼。朋友们欢呼着把金币递给你，但你觉得，你得到的东西比金币值钱得多。' },
+    { text: '第三天就放弃了', require: {}, effects: { 智慧: 3, 魅力: -2 }, narrative: '第三天的暴雨浇灭了你最后的斗志。你湿漉漉地回了村，被朋友们笑了一整个月。但你并不觉得丢人——因为你现在知道了自己的极限在哪里。下一次，你会准备得更充分。' },
+  ]},
+  { id: 'youth_08', stages: ['少年'], weight: 5, narrativeOnly: true, options: [], title: '第一把武器', narrative: '你用攒了半年的零花钱买到了人生中第一把真正的武器——不是什么神兵利器，只是一把普通的短剑，铁匠铺里最便宜的那把。剑柄有点歪，剑身上有一小块锈迹。但你不在乎。你把它挂在腰上，在镇上来回走了三圈，觉得全世界都在看你。晚上你把它放在枕头底下睡觉。多年以后你换了很多把武器，每一把都比这把好——但没有一把让你那样开心过。' },
+  { id: 'adult_08', stages: ['青年'], weight: 6, title: '伪造文书', narrative: '有人出高价请你伪造一份贵族身份证明——有了它，一个平民就可以继承一笔本不属于他的遗产。文书上的每个字都可能是犯罪证据，但报酬足以让你三年不工作。', options: [
+    { text: '接下活计', require: { 智慧: 70 }, effects: { 财富: 2000, 道德: -15, 声望: -10 }, narrative: '你花了两周查资料、仿印章、调墨水。成品几可乱真——连纸张都用了和真品同样年份的羊皮纸。钱如期到账了。你听说那个"假贵族"成功继承了家产，日子过得还不错。但你每次经过王都的档案馆都会加快脚步。' },
+    { text: '举报给当局', require: {}, effects: { 声望: 15, 道德: 10 }, narrative: '你假装答应了，然后把所有证据交给了卫兵。那个委托人被逮捕时对你破口大骂——但几周后调查发现，这笔遗产本来就是他诈骗的一部分。你阴差阳错地破了一个连环案，还拿到了赏金。' },
+  ]},
+  { id: 'adult_09', stages: ['青年'], weight: 5, narrativeOnly: true, options: [], title: '深夜酒馆', narrative: '凌晨两点的酒馆里只剩下你、老板、和一个趴桌上睡着了的醉汉。老板一边擦杯子一边跟你聊——他以前是个水手，去过五十多个港口，最后被一个厨娘留在了这座内陆城市。他说他这辈子最骄傲的事，不是见过多少大海，而是每天晚上关店前把她做的那碗面吃完。你喝完最后一口酒，走出酒馆时天已经快亮了。你回头看了一眼那盏昏黄的灯——它像是一个承诺，承诺这世界上总有一个人在等着另一个人回家。' },
+  { id: 'prime_09', stages: ['壮年'], weight: 6, title: '铸造传奇', narrative: '你收集了大陆上最稀有的材料——陨铁、龙鳞碎片、凤凰的尾羽。你找到了一位隐居多年的传奇铁匠，他看了你的材料沉默了很久，然后问："你打算造什么？"' , options: [
+    { text: '造一把武器', require: { 力量: 100 }, effects: { 力量: 15, 声望: 30, 财富: 1500 }, setFlag: 'legendaryWeapon', narrative: '炉火烧了七天七夜。铁匠说你造的不是武器——是一个象征。那把剑出世时，剑身上的纹路像流动的岩浆。你在试剑时一剑劈开了三寸厚的铁板。铁匠拄着锤子看着你，眼睛里有泪光："我打了一辈子铁，这是最后一件。谢谢你让我带着它离开。"' },
+    { text: '造一件防具', require: { 体质: 90 }, effects: { 体质: 15, 声望: 20 }, narrative: '你选择造一件胸甲——不为了攻击，为了守护。铁匠花了三个月，每一锤都像是在写诗。成品轻如羽毛，硬如龙鳞。你把胸甲穿在身上时，铁匠说："我希望你永远用不到它的全部本事——但如果要用到，它会护住你的心。"' },
+  ]},
+  { id: 'prime_10', stages: ['壮年'], weight: 5, narrativeOnly: true, options: [], title: '午夜的城墙', narrative: '轮到你值夜班巡逻城墙了。今晚没有月亮，只有火把在风里发出噼啪的响声。你在城墙上走了一圈又一圈，跟每一个哨兵点头致意。远方是黑暗的旷野——什么都没有，又像什么都有可能藏着。你在最高的塔楼上站了一会儿，看着这座你守护的城池安静地沉睡着。没有人知道你的名字，但此刻——你也不需要任何人知道。你抽了一口凉凉的夜风，紧了紧披风，觉得这种安静，值了。' },
+  { id: 'mid_07', stages: ['中年'], weight: 6, title: '失踪的商队', narrative: '一支满载货物的商队在穿越山脉时失踪了——整整二十辆马车，价值连城的丝绸和香料，连人带货消失得无影无踪。商会悬赏三千金币寻找线索。有人说被山贼劫了，有人说是山体滑坡，还有人说是——别的什么东西。', options: [
+    { text: '带队调查', require: { 敏捷: 80, 智慧: 70 }, effects: { 智慧: 8, 财富: 1500, 声望: 20 }, narrative: '你在雪山上走了三天，最终在一个隐秘的峡谷裂缝中找到了商队——不是被劫，是被困。一场雪崩封住了唯一的出口，商队已经在里面困了两周。你带人凿开积雪，把所有人和货都活着带了回来。商会的感谢信镶在你的墙上，但你觉得更应该被感谢的是——运气。再晚三天，他们就没吃的了。' },
+    { text: '派出探子', require: { 财富: 500 }, effects: { 财富: -500, 声望: 10 }, narrative: '你没有亲自去——但你花钱请了当地最好的猎人和向导。他们找到了一个幸存的车夫，他正独自一人往山下走，已经走了四天。根据他的描述，商队被困在了一个被雪埋住的峡谷里。你用最快的速度组织了救援——出钱，也是出力的一种方式。' },
+  ]},
+  { id: 'mid_08', stages: ['中年'], weight: 5, narrativeOnly: true, options: [], title: '酒窖里的尘', narrative: '你在自家酒窖里翻出了一瓶积满灰尘的旧酒——标签已经看不清了，但瓶身完好。你拔开瓶塞，酒香瞬间充满了整个地窖。你忽然想起来：这是三十年前，你的父亲埋下去的。他说等他老了再喝。他没能等到那一天。你倒了一杯，放在父亲的照片前。然后自己倒了一杯，坐在地窖的台阶上慢慢喝。酒很烈，像父亲的脾气。你想：爸，我没法替你喝这杯——我只能陪你喝这杯。' },
+  { id: 'late_07', stages: ['中老年'], weight: 6, title: '外交调停', narrative: '两个邻国之间的摩擦已经持续了十年。边境上的小规模冲突越来越频繁，全面战争一触即发。出乎所有人的意料，两国国王同时指名要你来当调停人——一个非贵族、非外交官出身的普通人。这在大陆外交史上是前所未有的。', options: [
+    { text: '主持和平谈判', require: { 声望: 400, 魅力: 100 }, effects: { 声望: 80, 道德: 20, 财富: 3000 }, narrative: '你在谈判桌上坐了一个月。第一周双方还在互相拍桌子，第二周开始松动，第三周你提出了一个双方都不完全满意但都能接受的方案，第四周——条约签了。十年僵局，一个月解开。你走出谈判厅时，外面聚集了上千人，他们不需要翻译——他们看到你在笑着摇头，就知道和平来了。' },
+    { text: '拒绝，不在其位', require: {}, effects: { 智慧: 5 }, narrative: '你写了一封诚恳的婉拒信，推荐了一位你认识的退休法官。"我不是外交官，我只是一个见过一些世面的普通人。但他——他是专业的。"你推荐的法官成功完成了调停。有时候，最聪明的做法就是让更合适的人上场。' },
+  ]},
+  { id: 'late_08', stages: ['中老年'], weight: 5, narrativeOnly: true, options: [], title: '冬夜的炉火', narrative: '整个村子被大雪封住了。没人进出，也没人着急。你坐在壁炉前，膝盖上盖着一条旧毯子——那是你母亲织的。炉火烧得旺旺的，木柴偶尔发出一声清脆的爆裂。你手里端着一杯热可可，旁边放着一本读了一半的书。窗外在下雪——很大的雪。但你不在意。今晚你有一本书、一杯热饮、一堆温暖的柴火。这就是你年轻时无法理解的那种幸福。现在你懂了。' },
+  { id: 'old_07', stages: ['老年'], weight: 6, title: '王朝的请求', narrative: '新登基的年轻国王亲自登门拜访你——不是以国王的身份，而是以一个焦虑年轻人的身份。他在王座上坐了不到三个月，就已经感受到了来自四面八方的压力。"你是怎么挺过来的？"他问。他看起来比你当年第一次上战场时还要年轻。', options: [
+    { text: '倾囊相授', require: { 声望: 300 }, effects: { 声望: 50, 道德: 15 }, narrative: '你和他聊了整整一个下午。不是以导师的姿态，而是以一个同样迷茫过的过来人。你告诉他你犯过的最大错误、你后悔过的最大决定、你最想对年轻时自己说的话。他走的时候握了你的手很久——那双眼睛里的焦虑少了一些，多了某种东西：也许叫坚定。他后来成了一位好国王——你从未公开说那是你的功劳，但你知道。' },
+    { text: '给几句建议就走', require: {}, effects: { 智慧: 5 }, narrative: '"做个好人，"你拍了拍他的肩膀，"剩下的自己悟。"你觉得自己有点不近人情，但你也知道——真正的王者，不应该依赖任何人的指点。那个年轻人后来在历史上被称为"自学之王"。你每次听到这个名号就忍不住笑。' },
+  ]},
+  { id: 'old_08', stages: ['老年'], weight: 5, narrativeOnly: true, options: [], title: '银杏树下', narrative: '院子里那棵银杏树又黄了。满地的金黄叶子铺得像地毯一样厚。你坐在树下，看着叶子一片一片地落下来。有人说银杏是最古老的树——它的祖先见过恐龙。你忽然觉得，如果一棵树能活那么久，也许它什么都见过、什么都知道，只是不能说。你把手放在粗糙的树皮上，像是握了一位老朋友的手。风吹过来，整棵树在沙沙作响——也许它在回答你，只是你用了一辈子才学会听懂。' },
+  { id: 'common_13', stages: ['青年', '壮年', '中年', '中老年'], weight: 5, title: '过路的诗人', narrative: '一个流浪诗人路过你的门口，问能不能借一晚住。他的吉他背上刻满了去过的地方的名字——有些你听过，有些你连发音都不会。他问你讨一碗水，你给了他水和面包，他回赠了你一首诗。', options: [
+    { text: '留他住一晚，听他唱歌', require: {}, effects: { 魅力: 5, 运气: 3 }, narrative: '那一晚你在自家院子里点了一小堆篝火，听他弹琴唱歌。他的嗓音沙哑，有些地方还跑了调，但每一首歌都有一个故事——关于一个远方、一段爱情、一次离别。他走的时候在墙上用炭笔画了一朵小花。"当作房租。"你一直没擦掉它——那是你这辈子收到过最便宜、也最珍贵的房租。' },
+    { text: '给他指路就走', require: {}, effects: { 智慧: 2 }, narrative: '你指了指通往驿站的路。"往前走，有条岔路右拐，有家客栈。"他笑着点了点头，背着吉他在夕阳里越走越远。你忽然觉得——他也许是某位流浪的神明，专门为那些有屋顶的人提醒一件事：世界很大，而你已经很久没有出发了。' },
+  ]},
+  { id: 'common_14', stages: ['少年', '青年', '壮年'], weight: 5, title: '绣球招亲', narrative: '一个富贵人家在广场上搭起了高台——他家的小姐到了出嫁的年纪，正在举办传统的抛绣球招亲。广场上挤满了年轻男子，热闹得像过节。你本来只是路过，却被朋友一把推了进去。绣球在空中划了一道弧线——朝你的方向飞来。', options: [
+    { text: '伸手接住', require: { 魅力: 50 }, effects: { 魅力: 5, 财富: 500, 声望: 10 }, narrative: '绣球不偏不倚地落在你怀里。全场都在看你。那位小姐在台上掩着嘴笑了——看起来很开心的样子。你们最终并没有在一起——但你因为这个契机认识了她的父亲，一位大商人，后来成了你最重要的生意伙伴。缘分这东西，不一定通向爱情。' },
+    { text: '赶紧躲开', require: {}, effects: { 敏捷: 5 }, narrative: '你一个侧身闪开了——绣球砸在了你身后一个满脸通红的铁匠学徒身上。他后来娶了那位小姐，据说过得非常美满。你每次看到他们一家人在集市上散步，心里都有一种奇怪的感觉：你躲开的不是一个绣球——而是一条完全不同的人生轨迹。' },
+  ]},
+  { id: 'common_15', stages: ['壮年', '中年', '中老年'], weight: 5, title: '御前比武', narrative: '王国每逢大庆典，都会举办御前比武——全大陆最优秀的战士聚集在国王面前一决高下。今年的头奖是一把王家锻造的大马士革剑。你不需要更多的荣誉了——但你是战士，身体里的每一个细胞都在告诉你：上台。', options: [
+    { text: '重出江湖', require: { 力量: 110, 体质: 90 }, effects: { 力量: 10, 声望: 35 }, narrative: '你在擂台上面对的都是年轻人——更快、更狂、更不知天高地厚。但你的经验无人能及。你在决赛里用了一招十年没使过的老招式，在最后一刻反败为胜。全场起立。国王从王座上站起来，把剑递给你时，低声说："不是给你的——是借给你的，等你老到拿不动了，还给我。"你笑着接过了剑。' },
+    { text: '当观众', require: {}, effects: { 智慧: 3, 魅力: 2 }, narrative: '你坐在国王旁边，一边喝着免费的葡萄酒，一边看年轻人互相厮杀。旁边有个老将军跟你差不多年纪，你们相视一笑——那种笑里有理解：我们都不需要再证明什么了。看着擂台上的热血沸腾，你一点都不羡慕。你羡慕的是他们还能打得动。' },
+  ]},
+  { id: 'chain_inherit_01', stages: ['青年', '壮年'], requireFlag: 'guild', excludeFlag: 'guildElite', weight: 8, title: '公会日常：带新人', narrative: '公会安排你带一个刚入会的菜鸟——一个连剑都拿不稳的少年，眼神里全是青涩和不自量力。你看着他，像看见了多年前的自己。真受不了——但你也知道，当年带你的那个老兵，看你的眼神大概也是一样的。', options: [
+    { text: '认真带他', require: {}, effects: { 魅力: 8, 道德: 5 }, narrative: '你花了一个月手把手教他——不是只教剑法，还教他怎么读任务公告、怎么跟委托人打交道、怎么在酒馆里不被骗钱。他后来成了一把好手。每次有人夸他，他都说："我师父教得好。"而他的师父——就是你。' },
+    { text: '让他自己悟', require: {}, effects: { 力量: 3 }, narrative: '"摔了跟头才知道疼。"你只给他最基本的指导，剩下的让他自己去撞。他确实吃了不少苦头——第一次任务就挂彩，第二次被委托人骗了一百金币。但他学得很快。三个月后，他已经不用你操心了。摔着摔着就长大了——跟你当年一样。' },
+  ]},
+  { id: 'chain_merchant_01', stages: ['壮年', '中年'], requireFlag: 'bigInvestor', weight: 8, title: '跨国商会', narrative: '几家大商会的代表找上了你——他们想联合成立一个跨国贸易联盟，统一关税、共享航道、互相保障安全。这是你从未见过的格局：不是在单一市场里竞争，而是把整个大陆变成一个自由贸易区。他们想让你——当年那个砸锅卖铁的赌徒——担任联盟的首任主席。', options: [
+    { text: '出任联盟主席', require: { 声望: 300, 财富: 20000 }, effects: { 声望: 50, 财富: 10000, 魅力: 8 }, setFlag: 'tradeKing', narrative: '你在联盟的就职典礼上只说了一句话："我三十年前口袋里只有三个铜板。"全场安静了三秒钟——然后响起了雷鸣般的掌声。他们不是在为一个富人鼓掌，而是在为一个可能鼓掌。每一个口袋里只有三个铜板的年轻人，今晚都睡得比平时更踏实了一点。' },
+    { text: '当普通股东', require: {}, effects: { 财富: 3000, 运气: 3 }, narrative: '你觉得当主席太出风头了——枪打出头鸟。你投了一笔钱入股，安安静静地当了个股东。联盟运作得很成功——而你在幕后享受分红，不用出席任何无聊的董事会。这笔买卖，你觉得比当年赌船运香料那次还要划算。' },
+  ]},
+  { id: 'chain_dragon_01', stages: ['中年', '中老年'], requireFlag: 'dragonSlayer', weight: 12, title: '屠龙者的孤独', narrative: '自从屠了那条红龙之后，人们看你的眼神变了。他们不再和你勾肩搭背地喝酒，不再在集市上随便拍你的肩膀。你被邀请去各种正式场合——但没有人邀请你去街边的大排档了。你是英雄。英雄是不能蹲在马路牙子上吃烤串的——这是不成文的规矩。你开始怀疑，那条龙并没有被你杀死——它只是变成了另一种东西：一座围绕你的无形牢笼。', options: [
+    { text: '保持普通人身份', require: {}, effects: { 魅力: 10, 道德: 5 }, narrative: '你做了一个出人意料的决定：你把龙牙卖了，把钱捐给了那三个被焚烧的村庄。然后你在公众面前宣布——屠龙者今天退休。第二天你穿着普通人的衣服走进了酒馆，所有人都愣了一秒——然后最粗犷的那个老兵吼了一声："请屠龙者喝一杯！"你被淹没在啤酒和笑声里。你知道——你回来了。' },
+    { text: '接受英雄身份', require: { 声望: 400 }, effects: { 声望: 40, 魅力: 5, 道德: -5 }, narrative: '你接受了命运的安排。你在各种典礼上被人举杯致敬，你的画像被挂在冒险者公会的大厅，你的名字被写进了教科书。但每个深夜，当你独自坐在空荡荡的大厅里时，你会想起那条龙临死前的眼睛——那里面没有愤怒，只有某种你不敢承认的东西：也许是理解。你理解那条龙。这才是最让你害怕的。' },
+  ]},
+  { id: 'extra_15', stages: ['青年', '壮年', '中年'], weight: 5, narrativeOnly: true, options: [], title: '雨中的驿站', narrative: '一场突如其来的大暴雨把你困在了荒郊野外的驿站。屋里只有一个老驿卒、一只正在打呼噜的猫和一壶煮了又煮的浓茶。你靠在窗边看着外面的雨幕，雨水敲在瓦片上的声音像是一首不太整齐的打击乐。老驿卒往你的杯子里添了茶，没有说话。你们就这样安静地坐了一整个下午——两个陌生人，因一场大雨而共享了几个小时的宁静。雨停后你付了茶钱。走出门时，老驿卒在身后说了一句："慢走，路上小心。"你不认识他，他也不认识你。但这就是善良——不需要理由。' },
+  { id: 'extra_16', stages: ['壮年', '中年', '中老年'], weight: 5, narrativeOnly: true, options: [], title: '信鸽归来', narrative: '一只信鸽扑棱着翅膀落在你的窗台——脚环上系着的信筒已经生锈了。你取下里面的纸条，发现这是一封二十年前发出的信。发信人是你自己。信上只写了一行字："如果你撑过了接下来的十年，请回信给我。" 你盯着那行字看了很久。然后你找了张新纸，在上面写："撑过了。比想象中难，也比想象中值得。谢谢你当年没有放弃。——二十年前的你。" 你系好信筒，放飞了鸽子。不指望它送到。但你只是想——对当年的自己说一声谢谢。' },
+];
+
+// === Storage ===
+
+function saveProgress() {
+  const progress = {
+    difficulty: state.difficulty,
+    rhythm: state.rhythm,
+    race: state.race,
+    identity: state.identity,
+    vision: state.vision,
+    talents: state.talents,
+    attrs: { ...state.attrs },
+    stageIndex: state.stageIndex,
+    completedEvents: [...state.completedEvents],
+    currentEvents: state.currentEvents.map(e => e.id),
+    selectedTalents: [...state.selectedTalents],
+    drawnTalents: [...state.drawnTalents],
+    remainingRerolls: state.remainingRerolls,
+    allocPoints: state.allocPoints,
+    screen: state.screen,
+    storyFlags: { ...state.storyFlags },
+    eventLog: [...state.eventLog],
+  };
+  try {
+    localStorage.setItem('life_progress', JSON.stringify(progress));
+  } catch (e) {
+    console.warn('Failed to save progress:', e);
+  }
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem('life_progress');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearProgress() {
+  try {
+    localStorage.removeItem('life_progress');
+  } catch (e) {}
+}
+
+function saveEnding() {
+  const record = {
+    id: new Date().toISOString().replace(/[:.]/g, '-'),
+    race: RACES[state.race]?.name || state.race,
+    identity: (IDENTITIES[state.race] || []).find(i => i.id === state.identity)?.name || state.identity,
+    vision: VISIONS.find(v => v.id === state.vision)?.name || state.vision,
+    difficulty: DIFFICULTIES[state.difficulty]?.name || state.difficulty,
+    rhythm: RHYTHMS[state.rhythm]?.name || state.rhythm,
+    talents: state.talents.map(tid => TALENTS.find(t => t.id === tid)?.name || tid),
+    finalAttrs: { ...state.attrs },
+    title: getEndingTitle(),
+    score: calculateScore(),
+    narrative: generateNarrative(),
+    deathType: state.deathType,
+    deathCause: state.deathCause,
+    visionDone: checkVisionComplete(),
+    timestamp: Date.now(),
+  };
+  try {
+    let history = [];
+    const raw = localStorage.getItem('life_history');
+    if (raw) history = JSON.parse(raw);
+    history.push(record);
+    if (history.length > 50) history = history.slice(-50);
+    localStorage.setItem('life_history', JSON.stringify(history));
+  } catch (e) {
+    console.warn('Failed to save ending:', e);
+  }
+}
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem('life_history');
+    return raw ? JSON.parse(raw).reverse() : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+// === Helper Functions ===
+
+function renderScreenWrapper(title, subtitle, content) {
+  return `<div class="screen-content">
+    <h2>${title}</h2>
+    <p class="subtitle">${subtitle}</p>
+    ${content}
+  </div>`;
+}
+
+function formatAttrChanges(bonuses) {
+  if (!bonuses) return '';
+  return Object.entries(bonuses).filter(([, v]) => v !== 0).map(([k, v]) => {
+    const cls = v > 0 ? 'tag-positive' : 'tag-negative';
+    const sign = v > 0 ? '+' : '';
+    return `<span class="tag ${cls}">${k} ${sign}${v}</span>`;
+  }).join(' ');
+}
+
+// 天赋抽取
+function drawTalents(count, negativeBias) {
+  const goodTalents = TALENTS.filter(t => t.type !== 'cursed');
+  const cursedTalents = TALENTS.filter(t => t.type === 'cursed');
+  let pool = [];
+  const negCount = negativeBias ? Math.min(count - 1, cursedTalents.length) : 0;
+  const posCount = count - negCount;
+  pool = shuffle([...goodTalents]).slice(0, Math.max(1, posCount))
+    .concat(shuffle([...cursedTalents]).slice(0, negCount));
+  return shuffle(pool);
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getTalentTypeLabel(type) {
+  const labels = { legendary: '传说', epic: '史诗', rare: '稀有', cursed: '诅咒' };
+  return labels[type] || type;
+}
+
+// === Rendering Engine ===
+
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  try {
+    switch (state.screen) {
+      case 'title': renderTitle(app); break;
+      case 'difficulty': renderDifficulty(app); break;
+      case 'rhythm': renderRhythm(app); break;
+      case 'race': renderRace(app); break;
+      case 'identity': renderIdentity(app); break;
+      case 'vision': renderVision(app); break;
+      case 'talentDraw': renderTalentDraw(app); break;
+      case 'allocPoints': renderAllocPoints(app); break;
+      case 'lifeEvent': renderLifeEvent(app); break;
+      case 'ending': renderEnding(app); break;
+      case 'history': renderHistory(app); break;
+      default: renderTitle(app);
+    }
+  } catch (e) {
+    app.innerHTML = `<div class="screen-content" style="text-align:center;padding-top:60px;">
+      <h2 style="color:#c41e3a;">⚠ 渲染错误</h2>
+      <p style="color:#888;margin:16px 0;">${e.message}</p>
+      <p style="color:#666;font-size:12px;">${e.stack ? e.stack.split('\\n').slice(0,3).join('<br>') : ''}</p>
+      <button class="btn primary" onclick="startNewGame()" style="margin-top:24px;">重新开始</button>
+    </div>`;
+  }
+}
+
+// Placeholder renderers (to be implemented in subsequent tasks)
+function renderTitle(app) {
+  app.innerHTML = `<div class="screen-content" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+    <h1 style="margin-bottom:8px;">人 生 重 开</h1>
+    <p class="subtitle">Life Restart Simulator</p>
+    <div style="width:100%;margin-top:40px;">
+      <button class="btn primary" onclick="startNewGame()">新 游 戏</button>
+      <button class="btn" onclick="continueGame()" id="continueBtn">继 续 游 戏</button>
+      <button class="btn secondary" onclick="viewHistory()">生 平 回 顾</button>
+      <button class="btn-share" onclick="shareGame()">📤 分享给朋友</button>
+    </div>
+  </div>`;
+  // 隐藏继续按钮（如果没有存档）
+  const progress = loadProgress();
+  document.getElementById('continueBtn').style.display = progress ? 'block' : 'none';
+}
+
+const SHARE_URL = 'https://life-restart-simulator-a7b.pages.dev/';
+
+function shareGame() {
+  let overlay = document.getElementById('share-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'share-overlay';
+    overlay.className = 'share-overlay';
+    overlay.innerHTML = `<img class="share-card-img" id="share-card-img" src="" alt="分享卡片" crossorigin="anonymous">
+      <p class="share-hint">长按图片保存，发到微信群</p>
+      <button class="share-close" id="share-close-btn">关闭</button>`;
+    document.body.appendChild(overlay);
+    document.getElementById('share-close-btn').onclick = hideShareCard;
+    overlay.onclick = function(e) { if (e.target === overlay) hideShareCard(); };
+  }
+
+  // Generate card on offscreen canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = 1200; canvas.height = 1600;
+  const ctx = canvas.getContext('2d');
+  const W = 1200, H = 1600, gold = '#c9a84c';
+
+  function rr(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
+    ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+    ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
+    ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r); ctx.closePath();
+  }
+
+  ctx.fillStyle = '#0d0d0d'; ctx.fillRect(0, 0, W, H);
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#1a1a2e'); bg.addColorStop(1, '#0d0d0d');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  ctx.globalAlpha = 0.06;
+  [{x:200,y:400,r:280},{x:1000,y:300,r:180},{x:1050,y:1200,r:320},{x:150,y:1300,r:160},{x:600,y:200,r:100}].forEach(d => {
+    ctx.fillStyle = gold; ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha = 0.25; ctx.fillStyle = gold;
+  for (let i = 0; i < 40; i++) { ctx.beginPath(); ctx.arc(80+Math.random()*(W-160), 80+Math.random()*(H-160), 1+Math.random()*2, 0, Math.PI*2); ctx.fill(); }
+  ctx.globalAlpha = 1;
+
+  ctx.fillStyle = '#1a1a2e';
+  ctx.shadowColor = 'rgba(201,168,76,0.15)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 8;
+  rr(ctx, 90, 220, W-180, H-560, 40); ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+  ctx.strokeStyle = 'rgba(201,168,76,0.3)'; ctx.lineWidth = 2;
+  rr(ctx, 90, 220, W-180, H-560, 40); ctx.stroke();
+
+  ctx.strokeStyle = gold; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(200, 120); ctx.lineTo(W-200, 120); ctx.stroke();
+
+  ctx.fillStyle = gold; ctx.font = "bold 88px 'Times New Roman', 'Songti SC', serif"; ctx.textAlign = 'center';
+  ctx.fillText('人生重开模拟器', W/2, 390);
+  ctx.font = '80px sans-serif'; ctx.fillText('🧝  🐉  ⚔️  🧙  🛡️  🌑', W/2, 530);
+  ctx.fillStyle = '#888'; ctx.font = "42px -apple-system, 'PingFang SC', sans-serif";
+  ctx.fillText('暗黑奇幻世界 · 重启你的人生', W/2, 640);
+
+  ctx.strokeStyle = '#3a3520'; ctx.lineWidth = 2; ctx.setLineDash([14, 10]);
+  ctx.beginPath(); ctx.moveTo(200, 720); ctx.lineTo(W-200, 720); ctx.stroke(); ctx.setLineDash([]);
+
+  ctx.fillStyle = '#aaa'; ctx.font = "36px -apple-system, 'PingFang SC', sans-serif";
+  ['🧬  五大种族，暗黑奇幻世界观', '🎴  天赋抽卡，传说史诗诅咒', '⚔️  四种难度，大逆风到龙傲天', '📖  四十个丰富人生事件', '🏆  多重结局，SS~D 评分'].forEach((f, i) => ctx.fillText(f, W/2, 820+i*88));
+
+  ctx.fillStyle = gold; ctx.font = "italic 34px 'Times New Roman', 'Songti SC', serif";
+  ctx.fillText('— 每一次选择，都是新的人生 —', W/2, 1310);
+
+  // Draw QR then show overlay
+  const qrImg = new Image(); qrImg.crossOrigin = 'anonymous';
+  qrImg.onload = () => {
+    const qs = 260, qx = (W-qs)/2, qy = H-370;
+    ctx.fillStyle = '#FFF'; rr(ctx, qx-24, qy-24, qs+48, qs+48, 32); ctx.fill();
+    ctx.strokeStyle = gold; ctx.lineWidth = 2; rr(ctx, qx-24, qy-24, qs+48, qs+48, 32); ctx.stroke();
+    ctx.drawImage(qrImg, qx, qy, qs, qs);
+    ctx.fillStyle = '#666'; ctx.font = "26px -apple-system, 'PingFang SC', sans-serif";
+    ctx.fillText('扫码或长按识别 · 开启暗黑奇幻人生', W/2, H-40);
+    showOverlay(canvas);
+  };
+  qrImg.onerror = () => { showOverlay(canvas); };
+  qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' + encodeURIComponent(SHARE_URL) + '&margin=8';
+}
+
+function showOverlay(canvas) {
+  const img = document.getElementById('share-card-img');
+  if (img) { img.src = canvas.toDataURL('image/png'); }
+  const overlay = document.getElementById('share-overlay');
+  if (overlay) { overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+}
+
+function hideShareCard() {
+  const overlay = document.getElementById('share-overlay');
+  if (overlay) { overlay.classList.remove('active'); document.body.style.overflow = ''; }
+}
+
+function startNewGame() {
+  state.screen = 'difficulty';
+  state.difficulty = '';
+  state.rhythm = '';
+  state.race = '';
+  state.identity = '';
+  state.vision = '';
+  state.talents = [];
+  state.attrs = { 力量: 10, 智慧: 10, 魅力: 10, 敏捷: 10, 体质: 10, 运气: 10, 财富: 100, 声望: 0, 道德: 0 };
+  state.stageIndex = 0;
+  state.drawnTalents = [];
+  state.remainingRerolls = 0;
+  state.selectedTalents = [];
+  state.currentEvents = [];
+  state.completedEvents = [];
+  state.storyFlags = {};
+  state.eventLog = [];
+  render();
+}
+
+function continueGame() {
+  const progress = loadProgress();
+  if (!progress) return;
+  // Restore state from saved progress
+  state.difficulty = progress.difficulty;
+  state.rhythm = progress.rhythm;
+  state.race = progress.race;
+  state.identity = progress.identity;
+  state.vision = progress.vision;
+  state.talents = progress.talents;
+  state.attrs = progress.attrs;
+  state.stageIndex = progress.stageIndex;
+  state.completedEvents = progress.completedEvents;
+  state.selectedTalents = progress.selectedTalents;
+  state.drawnTalents = progress.drawnTalents;
+  state.remainingRerolls = progress.remainingRerolls;
+  state.allocPoints = progress.allocPoints;
+  state.storyFlags = progress.storyFlags || {};
+  state.eventLog = progress.eventLog || [];
+  state.currentEvents = []; // Will be refilled by filterEvents on render
+  state.screen = 'lifeEvent';
+  render();
+}
+
+function viewHistory() {
+  state.screen = 'history';
+  render();
+}
+
+// Placeholder stubs — will be replaced in subsequent tasks
+function renderDifficulty(app) {
+  app.innerHTML = renderScreenWrapper('⚙️ 选择难度', '命运的齿轮即将转动...', `
+    ${Object.entries(DIFFICULTIES).map(([key, d]) => `
+      <div class="card" onclick="selectDifficulty('${key}')">
+        <h3>${d.icon} ${d.name}</h3>
+        <p style="font-size:13px;color:#888;">${d.desc}</p>
+        <p style="font-size:12px;color:#666;margin-top:4px;">
+          属性倍率 ×${d.attrMultiplier} | 抽${d.drawCount}选${d.pickCount} | 重roll ${d.rerolls}次
+        </p>
+      </div>
+    `).join('')}
+  `);
+}
+
+function selectDifficulty(key) {
+  state.difficulty = key;
+  state.screen = 'rhythm';
+  render();
+}
+function renderRhythm(app) {
+  app.innerHTML = renderScreenWrapper('📋 选择节奏', '你希望以怎样的速度走完这一生？', `
+    ${Object.entries(RHYTHMS).map(([key, r]) => `
+      <div class="card" onclick="selectRhythm('${key}')">
+        <h3>${r.name}</h3>
+        <p style="font-size:13px;color:#888;">${r.desc}</p>
+        <p style="font-size:12px;color:#666;margin-top:4px;">
+          阶段：${r.stages.join(' → ')}
+        </p>
+      </div>
+    `).join('')}
+  `);
+}
+
+function selectRhythm(key) {
+  state.rhythm = key;
+  state.screen = 'race';
+  render();
+}
+function renderRace(app) {
+  app.innerHTML = renderScreenWrapper('🧬 选择种族', '你的血脉决定了你的起点', `
+    ${Object.values(RACES).map(r => `
+      <div class="card" onclick="selectRace('${r.id}')">
+        <h3>${r.icon} ${r.name}</h3>
+        <p style="font-size:13px;color:#888;">${r.desc}</p>
+        <p style="font-size:12px;margin-top:4px;">
+          ${formatAttrChanges(r.bonuses)}
+        </p>
+      </div>
+    `).join('')}
+  `);
+}
+
+function selectRace(key) {
+  state.race = key;
+  state.screen = 'identity';
+  render();
+}
+function renderIdentity(app) {
+  const identities = IDENTITIES[state.race];
+  const race = RACES[state.race];
+  app.innerHTML = renderScreenWrapper('🎭 选择身份', `作为${race.icon} ${race.name}，你的出身是...`, `
+    ${identities.map(idt => `
+      <div class="card" onclick="selectIdentity('${idt.id}')">
+        <h3>${idt.name}</h3>
+        <p style="font-size:13px;color:#888;">${idt.desc}</p>
+        <p style="font-size:12px;margin-top:4px;">
+          ${formatAttrChanges(idt.bonuses)}
+        </p>
+      </div>
+    `).join('')}
+  `);
+}
+
+function selectIdentity(key) {
+  state.identity = key;
+  state.screen = 'vision';
+  render();
+}
+function renderVision(app) {
+  app.innerHTML = renderScreenWrapper('🌟 选择愿景', '你此生追求的是什么？', `
+    ${VISIONS.map(v => `
+      <div class="card" onclick="selectVision('${v.id}')">
+        <h3>${v.icon} ${v.name}</h3>
+        <p style="font-size:13px;color:#888;">${v.desc}</p>
+        <p style="font-size:11px;color:#666;margin-top:4px;">
+          目标：${Object.entries(v.condition).map(([k, val]) => `${k} ≥ ${val}`).join('，')}
+        </p>
+      </div>
+    `).join('')}
+  `);
+}
+
+function selectVision(key) {
+  state.vision = key;
+  state.screen = 'talentDraw';
+  const diff = DIFFICULTIES[state.difficulty];
+  state.drawnTalents = drawTalents(diff.drawCount, diff.negativeBias);
+  state.selectedTalents = [];
+  state.remainingRerolls = diff.rerolls;
+  render();
+}
+function renderTalentDraw(app) {
+  const diff = DIFFICULTIES[state.difficulty];
+  const selectedCount = state.selectedTalents.length;
+  const maxSelect = diff.pickCount;
+
+  app.innerHTML = renderScreenWrapper('🎴 抽取天赋', `选择 ${maxSelect} 个天赋（已选 ${selectedCount}/${maxSelect}）`, `
+    <div class="card-grid single-col">
+      ${state.drawnTalents.map(t => {
+        const isSelected = state.selectedTalents.includes(t.id);
+        const canSelect = selectedCount < maxSelect || isSelected;
+        const cls = isSelected ? 'selected' : '';
+        return `
+          <div class="card ${cls} ${!canSelect && !isSelected ? 'disabled' : ''}"
+               onclick="toggleTalentSelection('${t.id}')">
+            <h3 style="display:flex;justify-content:space-between;">
+              ${t.name}
+              <span class="tag tag-${t.type}">${getTalentTypeLabel(t.type)}</span>
+            </h3>
+            <p style="font-size:13px;color:#888;">${t.desc}</p>
+            <p style="font-size:12px;margin-top:4px;">
+              ${formatAttrChanges(t.effects)}
+            </p>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    <div class="reroll-info">🎲 剩余重抽次数：${state.remainingRerolls}</div>
+    <button class="btn ${state.remainingRerolls > 0 ? '' : 'secondary'}"
+            ${state.remainingRerolls === 0 ? 'disabled' : ''}
+            onclick="rerollTalents()">🔄 重抽</button>
+    <button class="btn primary" onclick="confirmTalents()"
+            ${selectedCount !== maxSelect ? 'disabled' : ''}>
+      确认选择 (${selectedCount}/${maxSelect})
+    </button>
+  `);
+}
+
+function toggleTalentSelection(id) {
+  const diff = DIFFICULTIES[state.difficulty];
+  const idx = state.selectedTalents.indexOf(id);
+  if (idx >= 0) {
+    state.selectedTalents.splice(idx, 1);
+  } else if (state.selectedTalents.length < diff.pickCount) {
+    state.selectedTalents.push(id);
+  }
+  render();
+}
+
+function rerollTalents() {
+  if (state.remainingRerolls <= 0) return;
+  state.remainingRerolls--;
+  const diff = DIFFICULTIES[state.difficulty];
+  state.drawnTalents = drawTalents(diff.drawCount, diff.negativeBias);
+  state.selectedTalents = [];
+  render();
+}
+
+function confirmTalents() {
+  state.talents = [...state.selectedTalents];
+  const diff = DIFFICULTIES[state.difficulty];
+  state.allocPoints = diff.allocPoints;
+  applyBaseAttributes();
+  state.screen = 'allocPoints';
+  render();
+}
+
+function applyBaseAttributes() {
+  state.attrs = { 力量: 10, 智慧: 10, 魅力: 10, 敏捷: 10, 体质: 10, 运气: 10, 财富: 100, 声望: 0, 道德: 0 };
+  const diff = DIFFICULTIES[state.difficulty];
+  const race = RACES[state.race];
+  const identity = IDENTITIES[state.race].find(i => i.id === state.identity);
+
+  Object.entries(race.bonuses).forEach(([k, v]) => {
+    if (state.attrs[k] !== undefined) state.attrs[k] += v;
+  });
+
+  if (identity && identity.bonuses) {
+    Object.entries(identity.bonuses).forEach(([k, v]) => {
+      if (state.attrs[k] !== undefined) state.attrs[k] += v;
+    });
+  }
+
+  state.talents.forEach(tid => {
+    const talent = TALENTS.find(t => t.id === tid);
+    if (talent) {
+      Object.entries(talent.effects).forEach(([k, v]) => {
+        if (state.attrs[k] !== undefined) state.attrs[k] += v;
+      });
+    }
+  });
+
+  ['力量','智慧','魅力','敏捷','体质','运气'].forEach(k => {
+    state.attrs[k] = Math.max(1, Math.round(state.attrs[k] * diff.attrMultiplier));
+  });
+
+  state.attrs.财富 = Math.max(0, state.attrs.财富);
+}
+
+function renderAllocPoints(app) {
+  const sixAttrs = ['力量', '智慧', '魅力', '敏捷', '体质', '运气'];
+  const socialAttrs = ['财富', '声望', '道德'];
+
+  app.innerHTML = renderScreenWrapper('📊 分配属性点', `剩余点数：<span style="color:#c9a84c;font-weight:bold;">${state.allocPoints}</span>（每点+2属性值）`, `
+    <div style="margin-bottom:16px;">
+      <p style="font-size:13px;color:#888;margin-bottom:8px;">基础六维</p>
+      ${sixAttrs.map(k => `
+        <div class="attr-row">
+          <span class="attr-name">${k}</span>
+          <div class="attr-controls">
+            <button class="attr-btn" onclick="adjustAttr('${k}', -1)" ${state.allocPoints <= 0 ? 'disabled' : ''}>−</button>
+            <span class="attr-value">${state.attrs[k]}</span>
+            <button class="attr-btn" onclick="adjustAttr('${k}', 1)" ${state.allocPoints <= 0 ? 'disabled' : ''}>+</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="margin-bottom:16px;">
+      <p style="font-size:13px;color:#888;margin-bottom:8px;">社会属性（开局固定）</p>
+      ${socialAttrs.map(k => `
+        <div class="attr-row">
+          <span class="attr-name">${k}</span>
+          <span class="attr-value">${state.attrs[k]}</span>
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn primary" onclick="confirmAlloc()">开始人生</button>
+  `);
+}
+
+function adjustAttr(attr, delta) {
+  if (delta > 0 && state.allocPoints <= 0) return;
+  if (delta < 0) {
+    state.allocPoints++;
+    state.attrs[attr] -= 2;
+  } else {
+    state.allocPoints--;
+    state.attrs[attr] += 2;
+  }
+  render();
+}
+
+function confirmAlloc() {
+  state.stageIndex = 0;
+  state.completedEvents = [];
+  state.screen = 'lifeEvent';
+  saveProgress();
+  render();
+}
+// === Event Engine ===
+
+function filterEvents(stageName) {
+  const diff = DIFFICULTIES[state.difficulty] || DIFFICULTIES.normal;
+  const vision = VISIONS.find(v => v.id === state.vision);
+
+  let candidates = EVENTS.filter(e => {
+    if (!e.stages.includes(stageName)) return false;
+    if (state.completedEvents.includes(e.id)) return false;
+    if (e.difficulty) {
+      const allowedDiffs = e.difficulty.split(',');
+      if (!allowedDiffs.includes(state.difficulty)) return false;
+    }
+    if (e.minAttr && Object.keys(e.minAttr).length > 0) {
+      for (const [k, v] of Object.entries(e.minAttr)) {
+        if ((state.attrs[k] || 0) < v) return false;
+      }
+    }
+    if (e.requireFlag && !state.storyFlags[e.requireFlag]) return false;
+    if (e.excludeFlag && state.storyFlags[e.excludeFlag]) return false;
+    return true;
+  });
+
+  if (diff.eventBias === 'negative') {
+    const deadly = candidates.filter(e => e.options && e.options.some(o => o.death));
+    const normal = candidates.filter(e => !e.options || !e.options.some(o => o.death));
+    candidates = shuffle([...deadly, ...deadly, ...normal]);
+  } else if (diff.eventBias === 'lucky') {
+    const lucky = candidates.filter(e => e.options && e.options.some(o => (o.effects.财富 || 0) > 500));
+    const normal = candidates.filter(e => !e.options || !e.options.some(o => (o.effects.财富 || 0) > 500));
+    candidates = shuffle([...lucky, ...lucky, ...normal]);
+  } else if (diff.eventBias === 'positive') {
+    candidates = shuffle(candidates.filter(e => !e.options || !e.options.some(o => o.death)));
+  }
+
+  const visionEvents = candidates.filter(e => e.vision === state.vision);
+  const otherEvents = candidates.filter(e => e.vision !== state.vision);
+  candidates = shuffle([...visionEvents, ...visionEvents, ...otherEvents]);
+
+  // 事件链优先 — 由之前选择触发的后续事件权重 ×4
+  const chainEvents = candidates.filter(e => e.requireFlag);
+  const nonChainEvents = candidates.filter(e => !e.requireFlag);
+  candidates = shuffle([...chainEvents, ...chainEvents, ...chainEvents, ...chainEvents, ...nonChainEvents]);
+
+  const weighted = [];
+  candidates.forEach(e => {
+    for (let i = 0; i < (e.weight || 10); i++) weighted.push(e);
+  });
+  const shuffled = shuffle(weighted);
+  const rhythmKey = state.rhythm || 'standard';
+  const baseCount = rhythmKey === 'compact' ? 2 : 2; // 精简每阶段2个，标准每阶段2个
+  const count = Math.min(baseCount, shuffled.length);
+  const picked = [];
+  const seen = new Set();
+  for (const e of shuffled) {
+    if (picked.length >= count) break;
+    if (!seen.has(e.id)) {
+      seen.add(e.id);
+      picked.push(e);
+    }
+  }
+  return picked;
+}
+
+// 每阶段结束时的总结叙事
+function getStageSummary(stageName) {
+  const race = RACES[state.race];
+  const raceName = race ? race.name : '';
+  const vision = VISIONS.find(v => v.id === state.vision);
+  const highestAttr = ['力量','智慧','魅力','敏捷','体质','运气'].reduce((a, b) => state.attrs[a] > state.attrs[b] ? a : b);
+
+  // 根据最高属性生成个性化描述
+  const traitDesc = {
+    '力量': '浑身充满了力量，仿佛能一拳击碎巨石',
+    '智慧': '头脑愈发敏锐，各种知识在脑海中融会贯通',
+    '魅力': '走到哪里都有人愿意为你开门，人脉在悄然生长',
+    '敏捷': '身手矫健，总能在第一时间抓住机会',
+    '体质': '身体结实得像铸铁，疾病和疲惫都绕着你走',
+    '运气': '总觉得冥冥之中有人眷顾，好运常常不期而至',
+  };
+
+  // 根据叙事标记生成个性化衔接
+  const flagLines = [];
+  if (state.storyFlags.guild) flagLines.push('你已是冒险者公会的一员，剑上的刻痕比昨天又多了一道。');
+  if (state.storyFlags.guildElite) flagLines.push('作为公会精英，你的名字在同行中已不再陌生。');
+  if (state.storyFlags.legendaryHero) flagLines.push('传奇冒险者的称号沉甸甸地挂在肩头——每一次呼吸，都有人期待你创造奇迹。');
+  if (state.storyFlags.mage) flagLines.push('魔法塔的灯火在你身后亮着，你已走上了一条与众不同的路。');
+  if (state.storyFlags.mageElite) flagLines.push('你的魔法造诣已经让同僚们侧目——未来，也许还有更大的舞台。');
+  if (state.storyFlags.archmage) flagLines.push('触摸过时间的人，眼中有常人无法理解的深邃。');
+  if (state.storyFlags.firstLove) flagLines.push('那段青涩的感情早已过去，但留下的温度从未消散。');
+  if (state.storyFlags.bigInvestor) flagLines.push('你赌过一次——赢了。那种感觉让你终身难忘。');
+  if (state.storyFlags.warHero) flagLines.push('战火虽然熄灭了，但你身上的伤疤和勋章一样，都在诉说着那段岁月。');
+  if (state.storyFlags.general) flagLines.push('从士兵到将军，你走过的路比大多数人的一生还要长。');
+  if (state.storyFlags.darkKnowledge) flagLines.push('那些不该触碰的知识在你脑海中游荡，像是活着的影子。');
+  if (state.storyFlags.darkMaster) flagLines.push('黑暗的知识已经重塑了你——你已经不完全属于这个世界的规则。');
+  if (state.storyFlags.immortality) flagLines.push('你凝视过死亡的眼睛——然后继续活了很久、很久。');
+  if (state.storyFlags.savedLives) flagLines.push('你曾用双手从死神手中抢回了生命——那是你灵魂中不会褪色的光。');
+  const flagLine = flagLines.length > 0 ? flagLines[Math.floor(Math.random() * flagLines.length)] : null;
+
+  const traitLine = traitDesc[highestAttr] || '每一步都在成长，每一天都在变成更好的自己';
+  const visionLine = vision ? `心底始终燃烧着「${vision.name}」的愿景。` : '你还不知道自己想要什么，但你隐约感到，答案就在前面的路上。';
+
+  const summaries = {
+    '婴儿': [
+      `你在襁褓中度过了最初的时光。${raceName}的血脉在你体内静静流淌，虽然你还什么都不懂，但命运的齿轮已经开始转动。世界很大，而你才刚刚睁开眼睛。`,
+      `牙牙学语、蹒跚学步——每一个小小的进步都让家人欣喜不已。你还不知道自己将要面对怎样的人生，但至少此刻，你在爱的包围中安然成长。`,
+    ],
+    '幼年': [
+      `稚嫩的童年如同一张白纸，每一点好奇都在上面留下了浅浅的痕迹。你开始认识这个世界——树叶为什么是绿的？星星为什么会眨眼？每一个问题都是一扇通往未来的窗。`,
+      `你在田野和街巷间奔跑，在故事和梦境中徜徉。这些看似平凡的日常，正在悄悄塑造着你性格的底色。孩子啊，慢点长大吧。`,
+    ],
+    '童年': [
+      `无忧无虑的日子总是过得飞快。你在学堂和玩耍之间学会了最初的规则，在跌跌撞撞中明白了什么是疼、什么是笑、什么是朋友。童年是一座你不会意识到自己正在离开的天堂。`,
+      `你已经不是那个什么都不懂的小孩了。你会问一些让大人沉默的问题，你会发现有些人说话不算数，你开始有了自己的秘密。童年的尾巴上，隐约可以望见少年时代的轮廓。`,
+    ],
+    '少年': [
+      `青春如同一阵急促的风，裹挟着热血、冲动和不着边际的梦想席卷而来。你第一次质疑权威，第一次为某个信念握紧了拳头，第一次在夜深人静时思考"我是谁"。这段时光也许混乱，但它的每一帧都闪着光。`,
+      `少年时代的你，像一把尚未淬火的剑——锋利、易折、充满无限可能。你做的每一个选择都像是掷向水面的石子，涟漪会扩散到你看不到的远方。`,
+    ],
+    '青年': [
+      `年轻的心是一团火，燃烧着梦想、爱情与不甘平凡。你闯入这个世界的方式也许笨拙，但足够热烈。那些深夜里的彻谈、清晨的出发、以及说不清为什么流下的泪水——这就是青春。`,
+      `你的羽翼日渐丰满，开始真正理解什么是代价、什么是选择、什么是责任。年轻不再是借口，而是你最强大的武器。去吧，去闯。`,
+    ],
+    '壮年': [
+      `而立之年，你逐渐褪去了少年的青涩。肩上的担子重了，脚下的路也更清晰了。你不再被情绪左右，而是学会了权衡、隐忍与担当。这是一个人最好的年纪——足够年轻去拼搏，也足够成熟去坚守。`,
+      `壮年的你像一棵正在全盛时期的大树，根须牢牢扎入大地，枝叶蓬勃地伸向天空。所有的经历——无论是荣耀还是创伤——都成了你的年轮。`,
+    ],
+    '中年': [
+      `不知不觉间，你已经走过了大半个世纪。回看这一路，有高光的胜利，也有深夜的懊悔。但一切痕迹都是你生命的纹理。你不再急着证明什么——因为你已经用半辈子活出了答案。`,
+      `中年的你开始更多地回首往事。有些老朋友已经不在了，有些梦想已经放下了，有些道理终于想明白了。你明白了：人生不是百米冲刺，而是一场马拉松——跑得快不重要，跑得久才算赢。`,
+    ],
+    '中老年': [
+      `两鬓渐染霜华，但你的眼神依然清澈。你开始更多地思考"留下什么"——不是财富，不是名声，而是那些能在你走后继续活着的温度。这是一段向内生长的年纪，每一缕夕阳都比朝阳更懂得黄昏的珍贵。`,
+      `你站在人生下半场的终点线前，回望来路——那样鲜活，那样充实。皱纹是时间的勋章，白发是智慧的冠冕。你没有老去，你只是换了一种方式年轻。`,
+    ],
+    '老年': [
+      `白发苍苍，步履蹒跚——但你眼中的世界比任何时候都更加通透。你不再追名逐利，不再攀比计较。阳光、清茶、一个午后的好梦，这些都是年轻时无暇享受的珍宝。`,
+      `人生走到这里，你终于理解了什么是"知天命"。不是放弃，不是妥协，而是一种豁达——知道自己从哪里来，到哪里去，知道什么值得坚持，什么应该放手。你的一生，是一本只有你能写的书。`,
+    ],
+  };
+
+  const options = summaries[stageName] || [`你在${stageName}阶段经历了难忘的时光。每一步选择都在塑造着独一无二的你。`];
+  const base = options[Math.floor(Math.random() * options.length)];
+  const flagPart = flagLine ? `<p style="color:#c9a84c;font-size:13px;margin-bottom:8px;">${flagLine}</p>` : '';
+  return `<p style="margin-bottom:12px;">${base}</p>${flagPart}<p style="color:#888;font-size:13px;">${traitLine}。${visionLine}</p>`;
+}
+
+function renderLifeEvent(app) {
+  const stages = (RHYTHMS[state.rhythm] || RHYTHMS.standard).stages;
+  const stageName = stages[state.stageIndex];
+  const isLastStage = state.stageIndex >= stages.length - 1;
+
+  if (state.currentEvents.length === 0) {
+    state.currentEvents = filterEvents(stageName);
+  }
+
+  const progressPct = ((state.stageIndex) / stages.length) * 100;
+
+  // 瀑布流：历史事件 + 当前事件
+  let html = `<div class="screen-content" id="waterfall">
+    <h2>${isLastStage ? '🌅 ' : '🎭 '}${stageName}</h2>
+    <div class="stage-info">
+      <span>阶段 ${state.stageIndex + 1}/${stages.length}</span>
+      <span>${state.difficulty && DIFFICULTIES[state.difficulty] ? DIFFICULTIES[state.difficulty].icon + ' ' + DIFFICULTIES[state.difficulty].name : ''}</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${progressPct}%"></div></div>`;
+
+  // 渲染历史事件（已完成的选择）
+  state.eventLog.forEach(log => {
+    html += `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #1a1a2e;">
+      <div style="font-size:11px;color:#666;margin-bottom:4px;">${log.stage} · ${log.title}</div>
+      <div class="narrative" style="font-size:13px;margin-bottom:8px;">"${log.narrative}"</div>
+      <div style="background:#1a1a2e;border-left:3px solid #c9a84c;padding:10px 14px;border-radius:4px;margin-bottom:6px;">
+        <span style="color:#c9a84c;font-size:13px;">▸ ${log.chosenText}</span>
+        ${log.effects ? `<span style="font-size:11px;color:#888;margin-left:8px;">${log.effects}</span>` : ''}
+      </div>
+      <p style="font-size:12px;color:#999;font-style:italic;">${log.result}</p>
+    </div>`;
+  });
+
+  // 当前事件区域（加 id 用于焦点跟随）
+  html += '<div id="currentEvent">';
+
+  // 缓冲加载：覆盖当前区域，只显示因果推演，不预渲染下一事件
+  if (state.loadingNext) {
+    html += `<div style="text-align:center;padding:40px 16px;animation:fadeIn 0.3s;">
+      <div style="display:inline-block;width:32px;height:32px;border:3px solid #1a1a2e;border-top-color:#c9a84c;border-radius:50%;animation:causalSpin 1s linear infinite;margin-bottom:16px;"></div>
+      <p style="color:#c9a84c;font-family:'Times New Roman',serif;font-size:16px;letter-spacing:2px;">AI 正在推演命运…</p>
+      <p style="color:#555;font-size:12px;margin-top:8px;animation:causalPulse 2s ease-in-out infinite;">
+        ${['正在计算你每一个选择的涟漪效应…',
+           '因果链正在重组，世界线重新计算中…',
+           '命运的神经网络正在寻找最优路径…',
+           '蝴蝶效应模型中，请稍候…',
+           '正在遍历千万条时间线，寻找属于你的那条…',
+           '多维度因果矩阵正在加权推演…',
+           '命运的概率云正在坍缩为确定的故事…'][Math.floor(Math.random() * 7)]}
+      </p>
+    </div>`;
+  } else if (state.currentEvents.length === 0) {
+    html += `
+      <div class="narrative" style="border-left-color:#555;margin-bottom:16px;">
+        ${getStageSummary(stageName)}
+      </div>
+      <button class="btn primary" id="nextStageBtn" onclick="nextStage()">${isLastStage ? '走向结局' : '进入下一阶段'}</button>`;
+  } else {
+    const event = state.currentEvents[0];
+
+    let causalBanner = '';
+    if (event.requireFlag) {
+      const reasons = getCausalReason(event.requireFlag);
+      causalBanner = `<div style="font-size:12px;color:#c9a84c;margin-bottom:8px;opacity:0.7;">↳ ${reasons}</div>`;
+    }
+
+    // 天赋关联提示
+    const talentHint = getTalentRelevance(event);
+
+    if (event.narrativeOnly) {
+      html += `
+        ${causalBanner}
+        <div class="narrative" style="border-left-color:#c9a84c;">"${event.narrative}"</div>
+        ${talentHint}
+        <button class="btn primary" onclick="completeNarrativeEvent()">继续</button>`;
+    } else {
+      const anyUnlocked = event.options.some(opt => checkOptionRequirement(opt));
+      html += `
+      ${causalBanner}
+      <div class="narrative">"${event.narrative}"</div>
+      ${talentHint}
+      ${event.options.map((opt, i) => {
+        const canChoose = checkOptionRequirement(opt);
+        const cls = canChoose ? '' : 'locked';
+        return `
+          <div class="option-item ${cls}" ${canChoose ? `onclick="chooseEventOption(${i})"` : ''}>
+            <div class="option-text">${String.fromCharCode(65 + i)}. ${opt.text}
+              ${!canChoose ? '<span class="tag tag-locked">🔒</span>' : ''}
+              ${opt.death ? '<span class="tag tag-negative">⚠ 致命</span>' : ''}
+            </div>
+            <div class="option-effects">
+              ${formatOptionEffects(opt.effects)}
+              ${!canChoose && opt.require ? `<span style="color:#666;">需要 ${Object.entries(opt.require).map(([k,v]) => `${k} ≥ ${v}`).join('，')}</span>` : ''}
+            </div>
+          </div>`;
+      }).join('')}
+      ${!anyUnlocked ? `
+        <div class="option-item" onclick="skipCurrentEvent()">
+          <div class="option-text">😔 无法应对 — 硬着头皮撑过去</div>
+          <div class="option-effects"><span class="effect-neg">体质 -5</span> · <span class="effect-neg">运气 -3</span></div>
+        </div>
+      ` : ''}`;
+    }
+  }
+
+  html += '</div>'; // #currentEvent
+
+  html += `<div style="margin-top:16px;font-size:11px;color:#555;border-top:1px solid #1a1a2e;padding-top:8px;margin-bottom:40px;">
+    力量 ${state.attrs.力量} · 智慧 ${state.attrs.智慧} · 魅力 ${state.attrs.魅力} · 敏捷 ${state.attrs.敏捷} · 体质 ${state.attrs.体质} · 运气 ${state.attrs.运气} | 财富 ${state.attrs.财富} · 声望 ${state.attrs.声望} · 道德 ${state.attrs.道德}
+  </div>`;
+
+  html += '</div>';
+  app.innerHTML = html;
+
+  // 平滑滚动到当前事件
+  setTimeout(() => {
+    const current = document.getElementById('currentEvent');
+    if (current) {
+      current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 200);
+}
+
+function checkOptionRequirement(opt) {
+  if (!opt.require) return true;
+  for (const [k, v] of Object.entries(opt.require)) {
+    if ((state.attrs[k] || 0) < v) return false;
+  }
+  return true;
+}
+
+function formatOptionEffects(effects) {
+  return Object.entries(effects).map(([k, v]) => {
+    const sign = v > 0 ? '+' : '';
+    let cls = 'effect-neutral';
+    if (v > 0) cls = 'effect-pos';
+    if (v < 0) cls = 'effect-neg';
+    return `<span class="${cls}">${k} ${sign}${v}</span>`;
+  }).join(' · ');
+}
+
+function chooseEventOption(idx) {
+  const event = state.currentEvents[0];
+  const option = event.options[idx];
+  if (!checkOptionRequirement(option)) return;
+
+  Object.entries(option.effects).forEach(([k, v]) => {
+    if (state.attrs[k] !== undefined) {
+      state.attrs[k] += v;
+      if (['力量','智慧','魅力','敏捷','体质','运气'].includes(k)) {
+        state.attrs[k] = Math.max(1, Math.min(200, state.attrs[k]));
+      }
+      if (k === '财富') state.attrs[k] = Math.max(0, Math.min(999999, state.attrs[k]));
+      if (k === '声望') state.attrs[k] = Math.max(0, Math.min(1000, state.attrs[k]));
+      if (k === '道德') state.attrs[k] = Math.max(-100, Math.min(100, state.attrs[k]));
+    }
+  });
+
+  state.completedEvents.push(event.id);
+  if (option.setFlag) state.storyFlags[option.setFlag] = true;
+  if (event.setFlag) state.storyFlags[event.setFlag] = true;
+
+  // 记录到瀑布流历史
+  const stages = RHYTHMS[state.rhythm]?.stages || RHYTHMS.standard.stages;
+  state.eventLog.push({
+    stage: stages[state.stageIndex], title: event.title, narrative: event.narrative,
+    chosenText: option.text, result: option.narrative || '',
+    effects: Object.entries(option.effects).filter(([,v]) => v !== 0).map(([k,v]) => `${k} ${v > 0 ? '+' : ''}${v}`).join(' · '),
+  });
+
+  state.currentEvents.shift();
+
+  if (option.death) {
+    state.screen = 'ending';
+    state.deathCause = option.deathNarrative || '你的旅途在此终结。';
+    state.deathType = 'accident';
+    saveEnding();
+    clearProgress();
+    render();
+    return;
+  }
+
+  if (checkVisionComplete()) {
+    state.screen = 'ending';
+    state.deathType = 'vision';
+    state.deathCause = '你完成了此生的使命！';
+    saveEnding();
+    clearProgress();
+    render();
+    return;
+  }
+
+  if (state.attrs.道德 >= 100 || state.attrs.道德 <= -100) {
+    state.screen = 'ending';
+    state.deathType = 'special';
+    state.deathCause = state.attrs.道德 >= 100 ? '你的善行感化了整个大陆。' : '你已堕入深渊，再无回头之路。';
+    saveEnding();
+    clearProgress();
+    render();
+    return;
+  }
+  if (state.attrs.财富 <= 0) {
+    state.screen = 'ending';
+    state.deathType = 'special';
+    state.deathCause = '你身无分文，在一个寒冷的冬夜静静睡去。';
+    saveEnding();
+    clearProgress();
+    render();
+    return;
+  }
+
+  saveProgress();
+  transitionWithLoading();
+}
+
+// 统一的缓冲过渡：模拟因果推演过程
+function transitionWithLoading() {
+  state.loadingNext = true; render();
+  const delay = 1000 + Math.random() * 2000; // 1-3秒随机
+  setTimeout(() => { state.loadingNext = false; render(); }, delay);
+}
+
+// 根据叙事标记生成因果衔接文本
+function getCausalReason(flag) {
+  const map = {
+    guild: '因为那年春天，你选择了加入冒险公会',
+    guildElite: '自从你晋升为公会精英',
+    mage: '因为你走上了魔法之路',
+    mageElite: '从魔法试炼中脱颖而出的你',
+    firstLove: '多年后的某一天，那段青涩的感情有了回响',
+    bigInvestor: '因为当年你赌上一切的那笔投资',
+    warHero: '自从你在战场上立下赫赫战功',
+    darkKnowledge: '因为你触碰了不该触碰的知识',
+    darkMaster: '当你越走越深，黑暗不再是黑暗',
+    immortality: '因为你选择了超越死亡',
+    savedLives: '因为你曾用双手救回生命',
+    tookContract: '从那个神秘委托开始',
+    legendaryHero: '完成了传奇任务的你，已经是活着的传说',
+    archmage: '触摸过时间的大法师，看到了别人看不到的东西',
+    general: '从士兵一步步走到将军的你',
+  };
+  return map[flag] || '';
+}
+
+// 天赋-事件关联：检查玩家天赋，为事件添加个性化描述
+function getTalentRelevance(event) {
+  const talentNames = state.talents.map(tid => TALENTS.find(t => t.id === tid)).filter(Boolean);
+  if (talentNames.length === 0) return '';
+
+  // 根据事件内容匹配相关天赋
+  const relevant = [];
+  talentNames.forEach(t => {
+    const e = t.effects;
+    // 力量相关事件 + 力量天赋
+    if ((event.title.includes('武') || event.title.includes('战') || event.title.includes('剑') || event.title.includes('角斗') || event.title.includes('决斗')) && e.力量 > 0) {
+      relevant.push(`你「${t.name}」的天赋让你在这场较量中占得先机。`);
+    }
+    // 智慧事件 + 智慧天赋
+    if ((event.title.includes('魔法') || event.title.includes('学') || event.title.includes('书') || event.title.includes('知识') || event.title.includes('试炼')) && e.智慧 > 0) {
+      relevant.push(`「${t.name}」让你比常人更快地理解眼前的一切。`);
+    }
+    // 魅力事件 + 魅力天赋
+    if ((event.title.includes('爱') || event.title.includes('重逢') || event.title.includes('演说') || event.title.includes('社交')) && e.魅力 > 0) {
+      relevant.push(`你身上「${t.name}」的光环让周围的人不自觉地被吸引。`);
+    }
+    // 运气事件
+    if ((event.title.includes('奇遇') || event.title.includes('馅饼') || event.title.includes('占卜')) && e.运气 > 0) {
+      relevant.push(`「${t.name}」似乎在这时悄悄发挥了作用。`);
+    }
+    // 体质
+    if ((event.title.includes('暴风雨') || event.title.includes('冒险') || event.title.includes('征途')) && e.体质 > 0) {
+      relevant.push(`「${t.name}」赐予你的坚韧之躯此刻格外可靠。`);
+    }
+  });
+
+  if (relevant.length === 0) return '';
+  const pick = relevant[Math.floor(Math.random() * relevant.length)];
+  return `<div style="font-size:12px;color:#c9a84c;margin-bottom:8px;font-style:italic;">✨ ${pick}</div>`;
+}
+
+function completeNarrativeEvent() {
+  const event = state.currentEvents[0];
+  state.completedEvents.push(event.id);
+  if (event.setFlag) state.storyFlags[event.setFlag] = true;
+  const stages = RHYTHMS[state.rhythm]?.stages || RHYTHMS.standard.stages;
+  state.eventLog.push({
+    stage: stages[state.stageIndex], title: event.title, narrative: event.narrative,
+    chosenText: '——', result: '你继续前行。', effects: '',
+  });
+  state.currentEvents.shift();
+  saveProgress();
+  transitionWithLoading();
+}
+
+function skipCurrentEvent() {
+  const event = state.currentEvents[0];
+  state.completedEvents.push(event.id);
+  const stages = RHYTHMS[state.rhythm]?.stages || RHYTHMS.standard.stages;
+  state.eventLog.push({
+    stage: stages[state.stageIndex], title: event.title, narrative: event.narrative,
+    chosenText: '硬着头皮撑过去', result: '你付出了代价，但活了下来。', effects: '体质 -5 · 运气 -3',
+  });
+  state.currentEvents.shift();
+  state.attrs.体质 = Math.max(1, state.attrs.体质 - 5);
+  state.attrs.运气 = Math.max(1, state.attrs.运气 - 3);
+  saveProgress();
+  transitionWithLoading();
+}
+
+function nextStage() {
+  try {
+    const rhythmKey = state.rhythm || 'standard';
+    const stages = RHYTHMS[rhythmKey] ? RHYTHMS[rhythmKey].stages : RHYTHMS.standard.stages;
+    if (state.stageIndex >= stages.length - 1) {
+      state.screen = 'ending';
+      state.deathType = 'natural';
+      state.deathCause = '你在平静中走完了自己的一生。';
+      saveEnding();
+      clearProgress();
+      state.loadingNext = false; render();
+      return;
+    }
+    state.stageIndex++;
+    state.currentEvents = [];
+    saveProgress();
+    transitionWithLoading();
+  } catch (e) {
+    document.getElementById('app').innerHTML = `<div class="screen-content" style="text-align:center;padding-top:60px;">
+      <h2 style="color:#c41e3a;">加载失败</h2><p style="color:#888;">${e.message}</p>
+      <button class="btn primary" onclick="startNewGame()" style="margin-top:24px;">重新开始</button></div>`;
+  }
+}
+
+function checkVisionComplete() {
+  const vision = VISIONS.find(v => v.id === state.vision);
+  if (!vision) return false;
+  for (const [k, v] of Object.entries(vision.condition)) {
+    if ((state.attrs[k] || 0) < v) return false;
+  }
+  return true;
+}
+// === Scoring ===
+
+function calculateScore() {
+  const sixAttrs = ['力量', '智慧', '魅力', '敏捷', '体质', '运气'];
+  const avg = sixAttrs.reduce((s, k) => s + state.attrs[k], 0) / sixAttrs.length;
+  if (avg >= 160) return 'SS';
+  if (avg >= 130) return 'S';
+  if (avg >= 100) return 'A';
+  if (avg >= 70) return 'B';
+  if (avg >= 40) return 'C';
+  return 'D';
+}
+
+function getAttrGrade(val) {
+  if (val >= 180) return { grade: 'SS', cls: 'score-SS' };
+  if (val >= 150) return { grade: 'S', cls: 'score-S' };
+  if (val >= 120) return { grade: 'A', cls: 'score-A' };
+  if (val >= 80)  return { grade: 'B', cls: 'score-B' };
+  if (val >= 40)  return { grade: 'C', cls: 'score-C' };
+  return { grade: 'D', cls: 'score-D' };
+}
+
+function getEndingTitle() {
+  const grade = calculateScore();
+  if (state.deathType === 'vision') {
+    const vision = VISIONS.find(v => v.id === state.vision);
+    return vision ? vision.name : '命运之子';
+  }
+  const titles = { SS: '传奇不朽', S: '时代之光', A: '人中龙凤', B: '平凡之路', C: '坎坷一生', D: '悲剧人生' };
+  return titles[grade] || '无人知晓';
+}
+
+function generateNarrative() {
+  const vision = VISIONS.find(v => v.id === state.vision);
+  const parts = [];
+
+  if (state.deathType === 'accident') {
+    parts.push(state.deathCause);
+  } else if (state.deathType === 'natural') {
+    const rhythmStages = (RHYTHMS[state.rhythm] || RHYTHMS.standard).stages;
+    parts.push('你在' + rhythmStages[rhythmStages.length - 1] + '安然离世。');
+  } else if (state.deathType === 'vision') {
+    parts.push('你完成了「' + (vision ? vision.name : '未知') + '」的愿景！');
+  } else {
+    parts.push(state.deathCause || '你的故事到此结束。');
+  }
+
+  if (vision && checkVisionComplete()) {
+    parts.push('此生无憾矣。');
+  } else if (vision) {
+    parts.push('可惜你未能完成「' + vision.name + '」的愿景。');
+  }
+
+  if (state.attrs.财富 > 50000) parts.push('你留下了巨额财富。');
+  if (state.attrs.声望 > 500) parts.push('你的名字被世人铭记。');
+  if (Math.abs(state.attrs.道德) > 80) {
+    parts.push(state.attrs.道德 > 0 ? '人们称你为圣者。' : '人们惧怕你的名字。');
+  }
+
+  return parts.join(' ');
+}
+
+function renderEnding(app) {
+  const grade = calculateScore();
+  const title = getEndingTitle();
+  const vision = VISIONS.find(v => v.id === state.vision);
+  const visionDone = checkVisionComplete();
+  const sixAttrs = ['力量', '智慧', '魅力', '敏捷', '体质', '运气'];
+
+  app.innerHTML = `<div class="screen-content">
+    <div class="ending-header">
+      <div style="font-size:14px;color:#666;margin-bottom:8px;">${(DIFFICULTIES[state.difficulty]||{}).icon||''} ${(DIFFICULTIES[state.difficulty]||{}).name||''} · ${(RHYTHMS[state.rhythm]||{}).name||''}</div>
+      <div class="ending-title">「${title}」</div>
+      <div class="ending-grade">${grade}</div>
+      <div style="font-size:14px;color:#c9a84c;">综合评分</div>
+    </div>
+
+    <div class="ending-narrative">
+      <p>"${generateNarrative()}"</p>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <h3>📊 属性评定</h3>
+      ${sixAttrs.map(k => {
+        const g = getAttrGrade(state.attrs[k]);
+        return `
+          <div class="attr-row">
+            <span class="attr-name">${k}</span>
+            <span style="font-size:14px;color:#ccc;">${state.attrs[k]}</span>
+            <span class="score-badge ${g.cls}">${g.grade}</span>
+          </div>`;
+      }).join('')}
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <h3>🏛️ 社会成就</h3>
+      <div class="attr-row">
+        <span class="attr-name">财富</span>
+        <span style="color:#ccc;">${state.attrs.财富.toLocaleString()} 金币</span>
+      </div>
+      <div class="attr-row">
+        <span class="attr-name">声望</span>
+        <span style="color:#ccc;">${state.attrs.声望}</span>
+      </div>
+      <div class="attr-row">
+        <span class="attr-name">道德</span>
+        <span style="color:${state.attrs.道德 >= 0 ? '#4caf50' : '#f44336'};">${state.attrs.道德 >= 0 ? '+' : ''}${state.attrs.道德}</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <h3>🌟 愿景</h3>
+      <p>
+        ${vision ? vision.icon + ' ' + vision.name + ' ' : ''}
+        <span style="color:${visionDone ? '#4caf50' : '#f44336'};">
+          ${visionDone ? '✅ 已完成' : '❌ 未完成'}
+        </span>
+      </p>
+    </div>
+
+    <button class="btn primary" onclick="startNewGame()">再来一局</button>
+    <button class="btn" onclick="viewHistory()">生平回顾</button>
+    <button class="btn-share" onclick="shareGame()">📤 分享给朋友</button>
+    <button class="btn secondary" onclick="state.screen='title';render();" style="margin-top:16px;">返回标题</button>
+  </div>`;
+}
+
+function renderHistory(app) {
+  const history = loadHistory();
+
+  app.innerHTML = `<div class="screen-content">
+    <h2>📜 生平回顾</h2>
+    <p class="subtitle">${history.length === 0 ? '还没有任何记录' : `共 ${history.length} 条人生记录`}</p>
+    ${history.length === 0 ? `
+      <div style="text-align:center;padding:40px 0;">
+        <p style="font-size:48px;margin-bottom:16px;">📖</p>
+        <p style="color:#666;">开始你的第一局游戏吧</p>
+      </div>
+    ` : history.map(h => `
+      <div class="history-item">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="history-title">「${h.title}」</span>
+          <span class="score-badge score-${h.score}">${h.score}</span>
+        </div>
+        <div class="history-meta">
+          ${h.race} · ${h.identity} · ${h.difficulty} · ${h.rhythm}
+        </div>
+        <div class="history-meta">
+          愿景：${h.vision} ${h.visionDone ? '✅' : '❌'} | ${new Date(h.timestamp).toLocaleDateString('zh-CN')}
+        </div>
+        <p style="font-size:12px;color:#888;margin-top:4px;font-style:italic;">"${h.narrative}"</p>
+      </div>
+    `).join('')}
+    <button class="btn secondary" onclick="state.screen='title';render();">返回标题</button>
+  </div>`;
+}
+
+// Initialize
+render();
+</script>
+</body>
+</html>

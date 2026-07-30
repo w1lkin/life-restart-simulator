@@ -1,0 +1,103 @@
+<h2>核心数据模型</h2>
+<p class="subtitle">种族、身份、愿景、天赋的数据结构设计</p>
+
+<div class="section">
+  <h3>🧬 种族（5个）</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-size:13px;line-height:1.8;">
+      <table style="width:100%;border-collapse:collapse;color:#ccc;">
+        <tr style="border-bottom:1px solid #333;">
+          <th style="text-align:left;padding:6px;color:#e2b04a;">种族</th>
+          <th style="text-align:left;padding:6px;color:#e2b04a;">属性加成</th>
+          <th style="text-align:left;padding:6px;color:#e2b04a;">特色</th>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:6px;">👤 人类</td>
+          <td style="padding:6px;">全属性 +2（均衡）</td>
+          <td style="padding:6px;">适应性最强，无短板</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:6px;">🧝 精灵</td>
+          <td style="padding:6px;">智慧 +5, 魅力 +3, 体质 -2</td>
+          <td style="padding:6px;">寿命长，魔法亲和</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:6px;">🧔 矮人</td>
+          <td style="padding:6px;">力量 +5, 体质 +3, 魅力 -2</td>
+          <td style="padding:6px;">锻造大师，坚韧</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:6px;">🐉 龙裔</td>
+          <td style="padding:6px;">力量 +4, 体质 +3, 魅力 +3, 智慧 -3</td>
+          <td style="padding:6px;">龙族血脉，稀有强力</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:6px;">🌑 暗精灵</td>
+          <td style="padding:6px;">敏捷 +5, 智慧 +3, 魅力 -2</td>
+          <td style="padding:6px;">暗影亲和，高暴击率</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>🎭 身份（每个种族约3个）</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-size:13px;line-height:1.8;color:#ccc;">
+      <p>身份决定开局属性基值和初始财富/声望。以人类为例：</p>
+      <table style="width:100%;border-collapse:collapse;color:#ccc;">
+        <tr style="border-bottom:1px solid #333;">
+          <th style="text-align:left;padding:6px;color:#e2b04a;">身份</th>
+          <th style="text-align:left;padding:6px;color:#e2b04a;">加成</th>
+          <th style="text-align:left;padding:6px;color:#e2b04a;">起始财富</th>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:6px;">👑 贵族后裔</td>
+          <td style="padding:6px;">魅力+3, 声望+20</td>
+          <td style="padding:6px;">500 金币</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:6px;">⚒️ 工匠子弟</td>
+          <td style="padding:6px;">智慧+3, 体能+2</td>
+          <td style="padding:6px;">200 金币</td>
+        </tr>
+        <tr>
+          <td style="padding:6px;">🌾 平民出身</td>
+          <td style="padding:6px;">无加成，无短板</td>
+          <td style="padding:6px;">50 金币</td>
+        </tr>
+      </table>
+      <p style="margin-top:16px;font-size:12px;color:#888;">共约15个身份，覆盖各阶层，部分身份有"隐藏后续事件链"</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>🌟 愿景（人生目标，约10个）</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-size:13px;line-height:1.8;color:#ccc;">
+      <div class="options">
+        <div class="option" style="pointer-events:none;opacity:0.8;">
+          <div class="content">
+            <h3>⚔️ 传说勇者</h3>
+            <p>目标：击败魔王。关键属性：力量/体能。完成有专属结局CG</p>
+          </div>
+        </div>
+        <div class="option" style="pointer-events:none;opacity:0.8;">
+          <div class="content">
+            <h3>💰 富可敌国</h3>
+            <p>目标：财富达到100000。关键属性：智慧/魅力。解锁"商业帝国"结局</p>
+          </div>
+        </div>
+        <div class="option" style="pointer-events:none;opacity:0.8;">
+          <div class="content">
+            <h3>🧙 大贤者</h3>
+            <p>目标：智慧达到150。关键属性：智慧。解锁"真理之门"隐藏结局</p>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#888;margin-top:8px;">愿景决定特殊事件池和解锁条件，完成愿景有额外评分加成</p>
+    </div>
+  </div>
+</div>
