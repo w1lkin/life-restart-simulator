@@ -217,8 +217,7 @@ h3 { font-size: 16px; color: #c9a84c; margin-bottom: 8px; }
 </style>
 </head>
 <body>
-<div id="gp-bar" style="position:fixed;top:0;left:0;right:0;z-index:50;padding:6px 12px;background:rgba(20,24,40,.85)"></div>
-<div id="gp-leaderboard" style="position:fixed;right:8px;bottom:8px;z-index:50;max-width:200px;padding:10px;background:rgba(20,24,40,.9);border-radius:12px"></div>
+
 <div id="app"></div>
 
 <script>
@@ -2409,8 +2408,6 @@ async function renderHistory(app) {
 // Initialize（硬登录门：未登录不能玩）
 GamePlatform.init();
 GamePlatform.mountGate({ gameId: 'life-restart-simulator' }).then(() => {
-  GamePlatform.mountBar(document.getElementById('gp-bar'), { gameId: 'life-restart-simulator' });
-  GamePlatform.mountLeaderboard(document.getElementById('gp-leaderboard'), { gameId: 'life-restart-simulator' });
   render();
 });
 </script>
