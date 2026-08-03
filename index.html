@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0">
 <title>人生重开模拟器</title>
+<meta name="api-base" content="https://api.w1lkin.site">
+<script src="https://api.w1lkin.site/sdk.js"></script>
 <style>
 /* === Reset & Base === */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -215,6 +217,8 @@ h3 { font-size: 16px; color: #c9a84c; margin-bottom: 8px; }
 </style>
 </head>
 <body>
+<div id="gp-bar" style="position:fixed;top:0;left:0;right:0;z-index:50;padding:6px 12px;background:rgba(20,24,40,.85)"></div>
+<div id="gp-leaderboard" style="position:fixed;right:8px;bottom:8px;z-index:50;max-width:200px;padding:10px;background:rgba(20,24,40,.9);border-radius:12px"></div>
 <div id="app"></div>
 
 <script>
@@ -1196,17 +1200,15 @@ function saveProgress() {
     eventLog: [...state.eventLog],
   };
   try {
-    localStorage.setItem('life_progress', JSON.stringify(progress));
+    GamePlatform.setKV('life_progress', progress);
   } catch (e) {
     console.warn('Failed to save progress:', e);
   }
 }
 
-function loadProgress() {
+async function loadProgress() {
   try {
-    const raw = localStorage.getItem('life_progress');
-    if (!raw) return null;
-    return JSON.parse(raw);
+    return await GamePlatform.getKV('life_progress');
   } catch (e) {
     return null;
   }
@@ -1214,7 +1216,7 @@ function loadProgress() {
 
 function clearProgress() {
   try {
-    localStorage.removeItem('life_progress');
+    GamePlatform.setKV('life_progress', null);
   } catch (e) {}
 }
 
@@ -1237,21 +1239,34 @@ function saveEnding() {
     timestamp: Date.now(),
   };
   try {
-    let history = [];
-    const raw = localStorage.getItem('life_history');
-    if (raw) history = JSON.parse(raw);
-    history.push(record);
-    if (history.length > 50) history = history.slice(-50);
-    localStorage.setItem('life_history', JSON.stringify(history));
+    // 战绩上报云端：score = 结局等级数字（S=5...D=1，越大越好）
+    const scoreMap = { S: 5, A: 4, B: 3, C: 2, D: 1 };
+    const num = scoreMap[record.score] || 1;
+    GamePlatform.submitScore('life-restart-simulator', num, {
+      race: record.race, identity: record.identity, title: record.title, scoreText: record.score,
+      difficulty: record.difficulty, rhythm: record.rhythm, vision: record.vision,
+      visionDone: record.visionDone, narrative: record.narrative, deathType: record.deathType,
+    });
   } catch (e) {
-    console.warn('Failed to save ending:', e);
+    console.warn('Failed to submit ending:', e);
   }
 }
 
-function loadHistory() {
+async function loadHistory() {
   try {
-    const raw = localStorage.getItem('life_history');
-    return raw ? JSON.parse(raw).reverse() : [];
+    const items = await GamePlatform.getMyScores('life-restart-simulator', 50);
+    return items.map(it => ({
+      title: (it.meta && it.meta.title) || '未知',
+      race: (it.meta && it.meta.race) || '',
+      identity: (it.meta && it.meta.identity) || '',
+      score: (it.meta && it.meta.scoreText) || '',
+      difficulty: (it.meta && it.meta.difficulty) || '',
+      rhythm: (it.meta && it.meta.rhythm) || '',
+      vision: (it.meta && it.meta.vision) || '',
+      visionDone: (it.meta && it.meta.visionDone) || false,
+      narrative: (it.meta && it.meta.narrative) || '',
+      timestamp: it.created_at,
+    }));
   } catch (e) {
     return [];
   }
@@ -1344,12 +1359,15 @@ function renderTitle(app) {
       <button class="btn-share" onclick="shareGame()">📤 分享给朋友</button>
     </div>
   </div>`;
-  // 隐藏继续按钮（如果没有存档）
-  const progress = loadProgress();
-  document.getElementById('continueBtn').style.display = progress ? 'block' : 'none';
+  // 隐藏继续按钮（如果没有存档）—— 云端异步加载
+  document.getElementById('continueBtn').style.display = 'none';
+  loadProgress().then((progress) => {
+    const btn = document.getElementById('continueBtn');
+    if (btn) btn.style.display = progress ? 'block' : 'none';
+  });
 }
 
-const SHARE_URL = 'https://life-restart-simulator-a7b.pages.dev/';
+const SHARE_URL = 'https://life-restart-simulator.w1lkin.site/';
 
 function shareGame() {
   let overlay = document.getElementById('share-overlay');
@@ -1464,8 +1482,8 @@ function startNewGame() {
   render();
 }
 
-function continueGame() {
-  const progress = loadProgress();
+async function continueGame() {
+  const progress = await loadProgress();
   if (!progress) return;
   // Restore state from saved progress
   state.difficulty = progress.difficulty;
@@ -2358,8 +2376,8 @@ function renderEnding(app) {
   </div>`;
 }
 
-function renderHistory(app) {
-  const history = loadHistory();
+async function renderHistory(app) {
+  const history = await loadHistory();
 
   app.innerHTML = `<div class="screen-content">
     <h2>📜 生平回顾</h2>
@@ -2388,8 +2406,13 @@ function renderHistory(app) {
   </div>`;
 }
 
-// Initialize
-render();
+// Initialize（硬登录门：未登录不能玩）
+GamePlatform.init();
+GamePlatform.mountGate({ gameId: 'life-restart-simulator' }).then(() => {
+  GamePlatform.mountBar(document.getElementById('gp-bar'), { gameId: 'life-restart-simulator' });
+  GamePlatform.mountLeaderboard(document.getElementById('gp-leaderboard'), { gameId: 'life-restart-simulator' });
+  render();
+});
 </script>
 </body>
 </html>
