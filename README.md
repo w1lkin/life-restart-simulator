@@ -32,7 +32,3 @@ life-restart-simulator/
 
 已部署至 Cloudflare Pages：`life-restart-simulator-a7b.pages.dev`
 
-## 版本
-
-- **v1.0.0** — 初始发布：文字养成、事件引擎、属性系统、分享卡片
-- **v2.0.0** — 完善项目文档（AGENTS.md / README.md）
