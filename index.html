@@ -1198,24 +1198,32 @@ function saveProgress() {
     storyFlags: { ...state.storyFlags },
     eventLog: [...state.eventLog],
   };
+  // 本地即时兜底：无论是否登录/在线，先写 localStorage，保证刷新不丢
+  GamePlatform.localCache.set('life_progress', progress);
+  // 云端异步同步：失败不影响本地存档
   try {
-    GamePlatform.setKV('life_progress', progress);
+    GamePlatform.setKV('life_progress', progress).catch(() => {});
   } catch (e) {
-    console.warn('Failed to save progress:', e);
+    console.warn('Failed to save progress to cloud:', e);
   }
 }
 
 async function loadProgress() {
+  // 优先读云端（多设备同步）；云端不可用时回退本地缓存
   try {
-    return await GamePlatform.getKV('life_progress');
-  } catch (e) {
-    return null;
-  }
+    const cloud = await GamePlatform.getKV('life_progress');
+    if (cloud != null) {
+      GamePlatform.localCache.set('life_progress', cloud); // 回写本地，保持两端一致
+      return cloud;
+    }
+  } catch (e) {}
+  return GamePlatform.localCache.get('life_progress');
 }
 
 function clearProgress() {
+  GamePlatform.localCache.clear('life_progress');
   try {
-    GamePlatform.setKV('life_progress', null);
+    GamePlatform.setKV('life_progress', null).catch(() => {});
   } catch (e) {}
 }
 
